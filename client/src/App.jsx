@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux"; 
 import { loadUser } from "./redux/slices/authSlice";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
@@ -36,6 +36,7 @@ import FarmerEditProductPage from "./pages/farmer/EditProductPage";
 import FarmerOrdersPage from "./pages/farmer/OrdersPage";
 import FarmerProfilePage from "./pages/farmer/ProfilePage";
 import FarmerAiAssistantPage from "./pages/farmer/AiAssistantPage";
+import FarmerMessagesPage from "./pages/farmer/FarmerMessagesPage";
 
 // Admin Pages
 import AdminDashboardPage from "./pages/admin/DashboardPage";
@@ -45,6 +46,7 @@ import AdminOrdersPage from "./pages/admin/OrdersPage";
 
 function App() {
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user); 
 
   useEffect(() => {
     dispatch(loadUser());
@@ -55,6 +57,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Layout />}>
+          {/* Public Routes */}
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="login" element={<LoginPage />} />
@@ -68,7 +71,16 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="profile" element={<ProfilePage />} />
             <Route path="messages" element={<MessagesPage />} />
-            <Route path="messages/:userId" element={<ConversationPage />} />
+            <Route
+              path="messages/:userId"
+              element={
+                user?.role === "farmer" ? (
+                  <FarmerMessagesPage />
+                ) : (
+                  <ConversationPage />
+                )
+              }
+            />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/:id" element={<OrderDetailPage />} />
           </Route>
@@ -93,6 +105,7 @@ function App() {
             <Route path="farmer/orders" element={<FarmerOrdersPage />} />
             <Route path="farmer/profile" element={<FarmerProfilePage />} />
             <Route path="farmer/ai-assistant" element={<FarmerAiAssistantPage />} />
+            <Route path="farmer/messages" element={<FarmerMessagesPage />} />
           </Route>
 
           {/* Admin Routes */}
@@ -103,7 +116,7 @@ function App() {
             <Route path="admin/orders" element={<AdminOrdersPage />} />
           </Route>
 
-          {/* 404 Route */}
+          {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
