@@ -3,6 +3,7 @@ import Navbar from "./Navbar"
 import Footer from "./Footer"
 import { useSelector } from "react-redux"
 import Loader from "./Loader"
+import AIAssistantFab from "./AIAssistantFab"
 
 const Layout = () => {
   const { loading: authLoading } = useSelector((state) => state.auth)
@@ -18,6 +19,7 @@ const Layout = () => {
         <Outlet />
       </main>
       <Footer />
+      <AIAssistantFab />
     </div>
   )
 }

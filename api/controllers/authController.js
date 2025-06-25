@@ -14,12 +14,27 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, role, phone, address } = req.body;
 
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
+    // Check if email is already in use
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
       return res
         .status(400)
-        .json({ success: false, message: "User already exists" });
+        .json({ success: false, message: "Email is already in use" });
+    }
+
+    // Check if phone is already in use
+    const phoneExists = await User.findOne({ phone });
+    if (phoneExists) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Phone number is already in use" });
+    }
+
+    // Check if phone number is provided
+    if (!phone) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Phone number is required" });
     }
 
     const user = await User.create({
@@ -60,9 +75,14 @@ exports.register = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { emailOrPhone, password } = req.body;
 
-    const user = await User.findOne({ email }).select("+password");
+    // Check if login is using email or phone
+    const query = emailOrPhone.includes('@')
+      ? { email: emailOrPhone }
+      : { phone: emailOrPhone };
+
+    const user = await User.findOne(query).select("+password");
 
     if (!user) {
       return res

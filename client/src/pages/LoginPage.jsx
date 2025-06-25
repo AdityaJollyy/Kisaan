@@ -6,7 +6,7 @@ import { FaEnvelope, FaLock, FaLeaf } from "react-icons/fa";
 import Loader from "../components/Loader";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
+  const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
 
   const dispatch = useDispatch();
@@ -32,7 +32,7 @@ const LoginPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(login({ email, password }));
+    dispatch(login({ emailOrPhone, password }));
   };
 
   if (loading) {
@@ -73,25 +73,25 @@ const LoginPage = () => {
           <div className="rounded-md shadow-sm -space-y-px">
             <div className="mb-4">
               <label
-                htmlFor="email"
+                htmlFor="emailOrPhone"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                {"Email Address"}
+                {"Email Address or Phone Number"}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaEnvelope className="text-gray-400" />
                 </div>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
+                  id="emailOrPhone"
+                  name="emailOrPhone"
+                  type="text"
                   autoComplete="email"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={emailOrPhone}
+                  onChange={(e) => setEmailOrPhone(e.target.value)}
                   className="form-input pl-10"
-                  placeholder={"Email address"}
+                  placeholder={"Email address or phone number"}
                 />
               </div>
             </div>

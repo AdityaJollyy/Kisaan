@@ -98,7 +98,7 @@ const DashboardPage = () => {
       .filter((order) => order.status === "completed")
       .reduce((total, order) => total + order.totalAmount, 0);
 
-  const profileIncomplete = !profileLoading && !isFarmerProfileComplete(myFarmerProfile);
+  // const profileIncomplete = !profileLoading && !isFarmerProfileComplete(myFarmerProfile);
 
   if (productsLoading || ordersLoading || messagesLoading || profileLoading) {
     return <Loader />;
@@ -118,29 +118,7 @@ const DashboardPage = () => {
           <FaPlus />
           <span>Add New Product</span>
         </Link>
-      </div>      {/* Profile Incomplete Warning */}
-      {profileIncomplete && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-md">
-          <div className="flex items-center">
-            <FaExclamationTriangle className="text-yellow-500 h-6 w-6 mr-3" />
-            <div>
-              <p className="text-yellow-800 font-semibold">
-                Your profile is incomplete
-              </p>
-              <p className="text-yellow-700">
-                To appear in farmer listings and receive orders, you need to set up your business hours and order options (pickup/delivery).{" "}
-                <Link
-                  to="/farmer/profile"
-                  className="font-semibold text-yellow-800 hover:underline"
-                >
-                  Complete your profile
-                </Link>{" "}
-                to unlock all features.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
