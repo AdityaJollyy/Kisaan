@@ -14,11 +14,6 @@ const configureCloudinary = () => {
             api_secret: process.env.CLOUDINARY_API_SECRET,
         });
 
-        // Log Cloudinary configuration for debugging (without sensitive info)
-        console.log('Cloudinary configured with cloud_name:', process.env.CLOUDINARY_CLOUD_NAME);
-        console.log('Cloudinary API key set:', !!process.env.CLOUDINARY_API_KEY);
-        console.log('Cloudinary API secret set:', !!process.env.CLOUDINARY_API_SECRET);
-
         isConfigured = true;
     }
     return cloudinary;

@@ -3,8 +3,6 @@ import { toast } from "react-toastify"
 import { clearCart } from "./cartSlice"
 import axiosInstance from "../../utils/axiosConfig"
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-
 // Create order
 export const createOrder = createAsyncThunk(
   "orders/createOrder",

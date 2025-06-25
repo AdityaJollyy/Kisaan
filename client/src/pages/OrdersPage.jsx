@@ -12,14 +12,6 @@ const OrdersPage = () => {
 
   useEffect(() => {
     dispatch(getConsumerOrders());
-
-    // Set up polling interval for real-time order updates
-    const orderPollInterval = setInterval(() => {
-      dispatch(getConsumerOrders());
-    }, 20000); // Poll every 20 seconds
-
-    // Clean up on unmount
-    return () => clearInterval(orderPollInterval);
   }, [dispatch]);
 
   const filteredOrders = filter === "all"

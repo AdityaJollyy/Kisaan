@@ -12,14 +12,6 @@ const MessagesPage = () => {
   useEffect(() => {
     // Fetch conversations initially
     dispatch(getConversations());
-
-    // Set up polling interval for real-time updates
-    const conversationPollInterval = setInterval(() => {
-      dispatch(getConversations());
-    }, 15000); // Poll every 15 seconds
-
-    // Clean up on unmount
-    return () => clearInterval(conversationPollInterval);
   }, [dispatch]);
 
   if (loading) {

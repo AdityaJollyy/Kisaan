@@ -30,21 +30,9 @@ const OrdersPage = () => {
   const [deliveryTime, setDeliveryTime] = useState("");
 
   useEffect(() => {
-    console.log("Dispatching getFarmerOrders in OrdersPage");
     dispatch(getFarmerOrders());
-
-    // Set up polling interval for real-time order updates
-    const orderPollInterval = setInterval(() => {
-      dispatch(getFarmerOrders());
-    }, 20000); // Poll every 20 seconds
-
-    // Clean up on unmount
-    return () => clearInterval(orderPollInterval);
   }, [dispatch]);
 
-  useEffect(() => {
-    console.log("Farmer orders in OrdersPage:", farmerOrders);
-  }, [farmerOrders]);
   // Safety check - ensure farmerOrders is always an array
   const orders = Array.isArray(farmerOrders) ? farmerOrders : [];
 

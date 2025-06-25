@@ -6,7 +6,6 @@ const FarmerProfile = require("../models/FarmerProfileModel");
 // @access  Public
 exports.getAllFarmers = async (req, res) => {
   try {
-    console.log("Fetching all farmers with profiles...");
     const farmers = await User.find({ role: "farmer" }).select("-password");
 
     // Get farmer profiles for each farmer
@@ -20,7 +19,6 @@ exports.getAllFarmers = async (req, res) => {
       })
     );
 
-    console.log(`Returning ${farmersWithProfiles.length} farmers with profiles`);
     res.json({
       success: true,
       count: farmersWithProfiles.length,
@@ -99,9 +97,6 @@ exports.getMyFarmerProfile = async (req, res) => {
 // @access  Private (Farmer only)
 exports.updateFarmerProfile = async (req, res) => {
   try {
-    console.log("Updating farmer profile for user:", req.user._id);
-    console.log("Profile data received:", JSON.stringify(req.body, null, 2));
-
     const {
       farmName,
       description,
@@ -132,18 +127,14 @@ exports.updateFarmerProfile = async (req, res) => {
     let farmerProfile = await FarmerProfile.findOne({ user: req.user._id });
 
     if (farmerProfile) {
-      console.log("Updating existing farmer profile:", farmerProfile._id);
       farmerProfile = await FarmerProfile.findOneAndUpdate(
         { user: req.user._id },
         { $set: profileFields },
         { new: true, runValidators: true }
       );
     } else {
-      console.log("Creating new farmer profile");
       farmerProfile = await FarmerProfile.create(profileFields);
     }
-
-    console.log("Farmer profile saved successfully:", farmerProfile._id);
 
     res.json({
       success: true,

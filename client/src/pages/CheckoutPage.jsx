@@ -101,7 +101,6 @@ const CheckoutPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Input changed: ${name} = ${value}`);
 
     if (name.includes(".")) {
       const [parent, child, grandchild] = name.split(".");
@@ -136,8 +135,6 @@ const CheckoutPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    console.log("Form submitted", { orderType, orderDetails, cartItems });
 
     // Basic validation
     if (orderType === "pickup") {

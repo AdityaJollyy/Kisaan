@@ -82,7 +82,6 @@ const OrderDetailPage = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not specified";
-    console.log("Formatting date:", dateString);
 
     try {
       // For ISO date strings that end with Z (UTC/Zulu time)

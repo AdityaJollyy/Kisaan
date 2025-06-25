@@ -40,7 +40,6 @@ const ProductsPage = () => {
           setIsInitialLoad(false);
         })
         .catch((error) => {
-          console.error("Error loading products:", error);
           setDataLoaded(true);
           setIsInitialLoad(false);
         });

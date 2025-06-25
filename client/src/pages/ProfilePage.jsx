@@ -253,7 +253,10 @@ const ProfilePage = () => {
       const validation = validateImages(files);
       if (!validation.valid) {
         // Handle validation error - you might want to add error state for farm images
-        console.error('Farm image validation failed:', validation.errors);
+        setFarmImageUploadState(prev => ({
+          ...prev,
+          uploadError: validation.errors.join(', ')
+        }));
         return;
       }      // Set upload state
       setFarmImageUploadState(prev => ({

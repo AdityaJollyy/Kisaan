@@ -29,16 +29,8 @@ const Navbar = () => {
   // Auto-refresh farmer orders every 30 seconds
   useEffect(() => {
     if (isAuthenticated && user?.role === "farmer") {
-      // Fetch orders immediately on mount
+      // Fetch orders on mount only
       dispatch(getFarmerOrders());
-
-      // Set up polling interval
-      const orderPollInterval = setInterval(() => {
-        dispatch(getFarmerOrders());
-      }, 30000); // Poll every 30 seconds
-
-      // Clean up on unmount
-      return () => clearInterval(orderPollInterval);
     }
   }, [dispatch, isAuthenticated, user]);
 

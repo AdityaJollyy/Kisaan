@@ -3,8 +3,6 @@ import axios from "axios"
 import { toast } from "react-toastify"
 import axiosInstance from "../../utils/axiosConfig"
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-
 // Get all users (admin only)
 export const getAllUsers = createAsyncThunk("users/getAllUsers", async (_, { rejectWithValue }) => {
   try {

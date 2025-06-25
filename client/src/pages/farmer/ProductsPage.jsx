@@ -38,7 +38,9 @@ const ProductsPage = () => {
           }
         })
         .catch((error) => {
-          console.error("Error fetching farmer products:", error);
+          if (mounted) {
+            setDataFetched(true);
+          }
         });
     }
 
@@ -78,7 +80,7 @@ const ProductsPage = () => {
           setProductToDelete(null);
         })
         .catch((error) => {
-          console.error("Error deleting product:", error);
+          // Error already handled by Redux reducer
           setShowDeleteModal(false);
           setProductToDelete(null);
         });

@@ -17,12 +17,6 @@ const translateRouter = require("./routes/translate");
 // Load environment variables
 dotenv.config({ path: './.env' });
 
-// Debug environment variables
-console.log('Environment variables loaded:');
-console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('CLOUDINARY_API_KEY:', !!process.env.CLOUDINARY_API_KEY);
-console.log('CLOUDINARY_API_SECRET:', !!process.env.CLOUDINARY_API_SECRET);
-
 // Initialize Cloudinary configuration
 const { cloudinary } = require('./utils/cloudinary');
 cloudinary(); // This will trigger the configuration

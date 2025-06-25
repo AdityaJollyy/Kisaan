@@ -43,15 +43,6 @@ const ConversationPage = () => {
         setInitialLoadComplete(true);
       });
     dispatch(markMessagesAsRead(userId));
-
-    // Set up polling interval for real-time updates
-    const messagesPollInterval = setInterval(() => {
-      dispatch(getConversationMessages(userId));
-      dispatch(markMessagesAsRead(userId));
-    }, 10000); // Poll every 10 seconds
-
-    // Clean up on unmount
-    return () => clearInterval(messagesPollInterval);
   }, [dispatch, userId]);
 
   // Scroll to bottom only on initial load or when user sends a message
@@ -93,11 +84,9 @@ const ConversationPage = () => {
       .unwrap()
       .then(() => {
         // Scroll to bottom when user sends a new message
-        setTimeout(() => {
-          if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-          }
-        }, 100);
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
       });
     setNewMessage("");
   };

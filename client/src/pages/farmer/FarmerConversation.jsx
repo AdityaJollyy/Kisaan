@@ -85,11 +85,9 @@ const ConversationPage = () => {
       .unwrap()
       .then(() => {
         // Scroll to bottom when user sends a new message
-        setTimeout(() => {
-          if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-          }
-        }, 100);
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
       });
     setNewMessage("");
   };
