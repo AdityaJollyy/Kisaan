@@ -30,9 +30,7 @@ const UserSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: function () {
-        return this.role === "farmer";
-      },
+      required: [true, "Please provide a phone number"],
     },
     address: {
       street: String,
@@ -42,6 +40,10 @@ const UserSchema = new mongoose.Schema(
       coordinates: {
         lat: Number,
         lng: Number,
+      },
+      locationDetected: {
+        type: Boolean,
+        default: false,
       },
     },
     createdAt: {

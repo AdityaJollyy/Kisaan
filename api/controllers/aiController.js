@@ -51,7 +51,7 @@ exports.askFarmingQuery = async (req, res) => {
     Please answer the following farming query in a helpful, practical manner. 
     If the query is not in English, please respond in the same language as the query.
     Keep your response focused on Indian farming context and provide actionable advice.
-    Do not bold aur use "*" in your response. Answer in plain simple text
+    Do not bold the text or use "*" in your responses in any language. Answer in plain simple text
     
     Query: ${query}
     

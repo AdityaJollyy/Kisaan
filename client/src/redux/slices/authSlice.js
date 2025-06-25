@@ -49,9 +49,15 @@ export const login = createAsyncThunk(
         },
       };
 
+      // Use emailOrPhone directly or convert from email or phone
+      const loginData = {
+        emailOrPhone: userData.emailOrPhone || userData.email || userData.phone,
+        password: userData.password
+      };
+
       const { data } = await axiosInstance.post(
         `/api/auth/login`,
-        userData,
+        loginData,
         config
       );
 

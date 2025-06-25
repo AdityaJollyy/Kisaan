@@ -42,22 +42,114 @@ const AiAssistantPage = () => {
         {
             en: "What is the best time to plant rice in monsoon season?",
             hi: "मानसून में धान बोने का सबसे अच्छा समय कौन सा है?",
-            category: "Seasonal Farming"
+            bn: "বর্ষাকালে ধান রোপণের সেরা সময় কোনটি?",
+            te: "ఋతుపవన కాలంలో వరి నాటడానికి ఉత్తమ సమయం ఏది?",
+            mr: "पावसाळ्यात भात लावण्यासाठी सर्वोत्तम वेळ कोणती आहे?",
+            ta: "பருவமழைக் காலத்தில் நெல் நடுவதற்கு சிறந்த நேரம் எது?",
+            gu: "ચોમાસાની ઋતુમાં ડાંગર વાવવાનો શ્રેષ્ઠ સમય કયો છે?",
+            kn: "ಮುಂಗಾರು ಹಂಗಾಮಿನಲ್ಲಿ ಭತ್ತ ನೆಡಲು ಉತ್ತಮ ಸಮಯ ಯಾವುದು?",
+            ml: "മഴക്കാലത്ത് നെൽകൃഷിക്ക് ഏറ്റവും അനുയോജ്യമായ സമയം ഏതാണ്?",
+            pa: "ਮਾਨਸੂਨ ਦੇ ਮੌਸਮ ਵਿੱਚ ਝੋਨਾ ਲਗਾਉਣ ਦਾ ਸਭ ਤੋਂ ਵਧੀਆ ਸਮਾਂ ਕਿਹੜਾ ਹੈ?",
+            or: "ବର୍ଷା ଋତୁରେ ଧାନ ଲଗାଇବା ପାଇଁ ସର୍ବୋତ୍ତମ ସମୟ କେବେ?",
+            as: "বৰ্ষাকালত ধান ৰোৱাৰ বাবে আটাইতকৈ ভাল সময় কোনটো?",
+            ur: "مون سون کے موسم میں چاول لگانے کا بہترین وقت کیا ہے؟",
+            category: "Seasonal Farming",
+            category_hi: "मौसमी खेती",
+            category_bn: "মৌসুমী চাষ",
+            category_te: "రుతుపవన వ్యవసాయం",
+            category_mr: "मोसमी शेती",
+            category_ta: "பருவகால விவசாயம்",
+            category_gu: "મોસમી ખેતી",
+            category_kn: "ಕಾಲೋಚಿತ ಬೇಸಾಯ",
+            category_ml: "കാലാവസ്ഥാ കൃഷി",
+            category_pa: "ਮੌਸਮੀ ਖੇਤੀ",
+            category_or: "ଋତୁକାଳୀନ ଚାଷ",
+            category_as: "মৌসুমী খেতি",
+            category_ur: "موسمی کاشتکاری"
         },
         {
             en: "How to control pest attacks on tomato plants?",
             hi: "टमाटर के पौधों पर कीट हमले को कैसे नियंत्रित करें?",
-            category: "Pest Control"
+            bn: "টমেটো গাছে পোকা আক্রমণ নিয়ন্ত্রণ করবেন কীভাবে?",
+            te: "టమోటా మొక్కలపై తెగుళ్ల దాడిని ఎలా నియంత్రించాలి?",
+            mr: "टोमॅटोच्या रोपांवरील कीटकांचा हल्ला कसा नियंत्रित करावा?",
+            ta: "தக்காளி செடிகளில் பூச்சி தாக்குதலை எவ்வாறு கட்டுப்படுத்துவது?",
+            gu: "ટામેટાના છોડ પર જીવાતનો હુમલો કેવી રીતે નિયંત્રિત કરવો?",
+            kn: "ಟೊಮೆಟೊ ಸಸ್ಯಗಳ ಮೇಲೆ ಕೀಟಗಳ ದಾಳಿಯನ್ನು ಹೇಗೆ ನಿಯಂತ್ರಿಸುವುದು?",
+            ml: "തക്കാളി ചെടികളിലെ കീടബാധ എങ്ങനെ നിയന്ത്രിക്കാം?",
+            pa: "ਟਮਾਟਰ ਦੇ ਪੌਦਿਆਂ 'ਤੇ ਕੀੜਿਆਂ ਦੇ ਹਮਲਿਆਂ ਨੂੰ ਕਿਵੇਂ ਕੰਟਰੋਲ ਕਰੀਏ?",
+            or: "ଟମାଟୋ ଗଛରେ କୀଟ ଆକ୍ରମଣକୁ କିପରି ନିୟନ୍ତ୍ରଣ କରିବେ?",
+            as: " বিলাহী গছত কীট-পতংগৰ আক্ৰমণ কেনেকৈ নিয়ন্ত্ৰণ কৰিব?",
+            ur: "ٹماٹر کے پودوں پر کیڑوں کے حملوں کو کیسے کنٹرول کیا جائے؟",
+            category: "Pest Control",
+            category_hi: "कीट नियंत्रण",
+            category_bn: "কীট নিয়ন্ত্রণ",
+            category_te: "తెగులు నియంత్రణ",
+            category_mr: "कीटक नियंत्रण",
+            category_ta: "பூச்சி கட்டுப்பாடு",
+            category_gu: "જીવાત નિયંત્રણ",
+            category_kn: "ಕೀಟ ನಿಯಂತ್ರಣ",
+            category_ml: "കീടനിയന്ത്രണം",
+            category_pa: "ਕੀਟ ਕੰਟਰੋਲ",
+            category_or: "କୀଟ ନିୟନ୍ତ୍ରଣ",
+            category_as: "কীট নিয়ন্ত্রণ",
+            category_ur: "کیڑوں پر قابو"
         },
         {
             en: "What are the government subsidies available for organic farming?",
             hi: "जैविक खेती के लिए कौन सी सरकारी सब्सिडी उपलब्ध है?",
-            category: "Government Schemes"
+            bn: "জৈব চাষের জন্য কী কী সরকারি ভর্তুকি পাওয়া যায়?",
+            te: "సేంద్రీయ వ్యవసాయం కోసం అందుబాటులో ఉన్న ప్రభుత్వ రాయితీలు ఏమిటి?",
+            mr: "सेंद्रिय शेतीसाठी कोणत्या सरकारी सबसिडी उपलब्ध आहेत?",
+            ta: "இயற்கை விவசாயத்திற்கு கிடைக்கும் அரசு மானியங்கள் என்னென்ன?",
+            gu: "ઓર્ગેનિક ખેતી માટે કઈ સરકારી સબસિડી ઉપલબ્ધ છે?",
+            kn: "ಸಾವಯವ ಕೃಷಿಗಾಗಿ ಲಭ್ಯವಿರುವ ಸರ್ಕಾರಿ ಸಬ್ಸಿಡಿಗಳು ಯಾವುವು?",
+            ml: "ജൈവകൃഷിക്കായി ലഭ്യമായ സർക്കാർ സബ്സിഡികൾ ഏതൊക്കെയാണ്?",
+            pa: "ਜੈਵਿਕ ਖੇਤੀ ਲਈ ਕਿਹੜੀਆਂ ਸਰਕਾਰੀ ਸਬਸਿਡੀਆਂ ਉਪਲਬਧ ਹਨ?",
+            or: "ଜୈବିକ ଚାଷ ପାଇଁ କେଉଁ ସରକାରୀ ସବସିଡି ଉପଲବ୍ଧ?",
+            as: "জৈৱিক খেতিৰ বাবে কি কি চৰকাৰী ৰাজসাহায্য উপলব্ধ?",
+            ur: "نامیاتی کاشتکاری کے لیے کون سی سرکاری سبسڈی دستیاب ہیں؟",
+            category: "Government Schemes",
+            category_hi: "सरकारी योजनाएँ",
+            category_bn: "সরকারি প্রকল্প",
+            category_te: "ప్రభుత్వ పథకాలు",
+            category_mr: "सरकारी योजना",
+            category_ta: "அரசு திட்டங்கள்",
+            category_gu: "સરકારી યોજનાઓ",
+            category_kn: "ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು",
+            category_ml: "സർക്കാർ പദ്ധതികൾ",
+            category_pa: "ਸਰਕਾਰੀ ਸਕੀਮਾਂ",
+            category_or: "ସରକାରୀ ଯୋଜନା",
+            category_as: "চৰকাৰী আঁচনিসমূহ",
+            category_ur: "سرکاری اسکیمیں"
         },
         {
             en: "Best irrigation methods for water conservation",
             hi: "पानी के संरक्षण के लिए सबसे अच्छी सिंचाई विधियां",
-            category: "Water Management"
+            bn: "জল সংরক্ষণের জন্য সেরা সেচ পদ্ধতি",
+            te: "నీటి సంరక్షణకు ఉత్తమ నీటిపారుదల పద్ధతులు",
+            mr: "पाण्याच्या संवर्धनासाठी सर्वोत्तम सिंचन पद्धती",
+            ta: "நீர் பாதுகாப்புக்கான சிறந்த நீர்ப்பாசன முறைகள்",
+            gu: "પાણીના સંરક્ષણ માટે શ્રેષ્ઠ સિંચાઈ પદ્ધતિઓ",
+            kn: "ನೀರಿನ ಸಂರಕ್ಷಣೆಗಾಗಿ ಉತ್ತಮ ನೀರಾವರಿ ವಿಧಾನಗಳು",
+            ml: "ജലസംരക്ഷണത്തിനുള്ള മികച്ച ജലസേചന രീതികൾ",
+            pa: "ਪਾਣੀ ਦੀ ਸੰਭਾਲ ਲਈ ਸਭ ਤੋਂ ਵਧੀਆ ਸਿੰਚਾਈ ਵਿਧੀਆਂ",
+            or: "ଜଳ ସଂରକ୍ଷଣ ପାଇଁ ସର୍ବୋତ୍ତମ ଜଳସେଚନ ପଦ୍ଧତିଗୁଡ଼ିକ",
+            as: "পানী সংৰক্ষণৰ বাবে শ্ৰেষ্ঠ জলসিঞ্চন পদ্ধতিসমূহ",
+            ur: "پانی کے تحفظ کے لیے بہترین آبپاشی کے طریقے",
+            category: "Water Management",
+            category_hi: "जल प्रबंधन",
+            category_bn: "জল ব্যবস্থাপনা",
+            category_te: "నీటి నిర్వహణ",
+            category_mr: "जल व्यवस्थापन",
+            category_ta: "நீர் மேலாண்மை",
+            category_gu: "જળ વ્યવસ્થાપન",
+            category_kn: "ಜಲ ನಿರ್ವಹಣೆ",
+            category_ml: "ജല പരിപാലനം",
+            category_pa: "ਪਾਣੀ ਪ੍ਰਬੰਧਨ",
+            category_or: "ଜଳ ପରିଚାଳନା",
+            category_as: "জল ব্যৱস্থাপনা",
+            category_ur: "آبی انتظام"
         }
     ];
 
@@ -90,14 +182,6 @@ const AiAssistantPage = () => {
             setRecognition(recognitionInstance);
         }
     }, [dispatch, selectedLanguage]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [conversations]);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
 
     const getLanguageCode = (langCode) => {
         const languageMap = {
@@ -225,7 +309,8 @@ const AiAssistantPage = () => {
                                     className="w-full p-2 text-left text-sm bg-gray-50 hover:bg-green-50 rounded-lg transition-colors border border-gray-200 hover:border-green-300"
                                 >
                                     <div className="font-medium text-green-600 text-xs mb-1">
-                                        {sample.category}
+                                        {/* Render category label based on selected language */}
+                                        {sample[`category_${selectedLanguage}`] || sample.category}
                                     </div>
                                     <div className="text-gray-700 line-clamp-2">
                                         {selectedLanguage === 'en' ? sample.en : (sample[selectedLanguage] || sample.en)}
@@ -268,7 +353,8 @@ const AiAssistantPage = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {conversations.map((conversation, index) => (
+                                    {/* Render conversations oldest to newest (traditional chat order) */}
+                                    {conversations.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map((conversation, index) => (
                                         <div key={index} className="space-y-4">
                                             {/* User Message */}
                                             <div className="flex justify-end">
@@ -345,8 +431,8 @@ const AiAssistantPage = () => {
                                         type="button"
                                         onClick={handleVoiceInput}
                                         className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full transition-colors ${isListening
-                                                ? 'text-red-500 hover:text-red-600'
-                                                : 'text-gray-400 hover:text-green-500'
+                                            ? 'text-red-500 hover:text-red-600'
+                                            : 'text-gray-400 hover:text-green-500'
                                             }`}
                                         disabled={queryLoading}
                                     >

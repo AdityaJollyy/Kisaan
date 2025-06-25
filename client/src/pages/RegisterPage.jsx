@@ -11,6 +11,7 @@ import {
   FaLeaf,
 } from "react-icons/fa";
 import Loader from "../components/Loader";
+import LocationDetector from "../components/LocationDetector";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -26,6 +27,8 @@ const RegisterPage = () => {
       state: "",
       zipCode: "",
     },
+    acceptsPickup: false, // Order option
+    acceptsDelivery: false, // Order option
   });
 
   const [passwordError, setPasswordError] = useState("");
@@ -51,8 +54,29 @@ const RegisterPage = () => {
     }
   }, [dispatch, isAuthenticated, navigate, user]);
 
+  const handleLocationDetected = (locationData) => {
+    setFormData({
+      ...formData,
+      address: {
+        ...formData.address,
+        city: locationData.city,
+        state: locationData.state,
+        zipCode: locationData.zipCode,
+        coordinates: locationData.coordinates,
+      },
+    });
+  };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+
+    if (type === "checkbox") {
+      setFormData({
+        ...formData,
+        [name]: checked,
+      });
+      return;
+    }
 
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
@@ -87,6 +111,11 @@ const RegisterPage = () => {
       role: formData.role,
       phone: formData.phone,
       address: formData.address,
+      // Add order options if farmer
+      ...(formData.role === "farmer" && {
+        acceptsPickup: formData.acceptsPickup,
+        acceptsDelivery: formData.acceptsDelivery,
+      }),
     };
 
     dispatch(register(userData));
@@ -256,30 +285,61 @@ const RegisterPage = () => {
               </select>
             </div>
 
-            {formData.role === "farmer" && (
-              <div className="mb-4">
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaPhone className="text-gray-400" />
-                  </div>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="form-input pl-10"
-                    placeholder={"Phone Number"}
-                    required={formData.role === "farmer"}
-                  />
+            <div className="mb-4">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Phone Number
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaPhone className="text-gray-400" />
                 </div>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="form-input pl-10"
+                  placeholder={"Phone Number"}
+                  required
+                />
               </div>
+            </div>
+
+            {formData.role === "farmer" && (
+              <>
+                {/* Order Options */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Order Options
+                  </label>
+                  <div className="flex items-center gap-6">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="acceptsPickup"
+                        checked={formData.acceptsPickup}
+                        onChange={handleChange}
+                        className="form-checkbox"
+                      />
+                      Accepts Pickup Orders
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="acceptsDelivery"
+                        checked={formData.acceptsDelivery}
+                        onChange={handleChange}
+                        className="form-checkbox"
+                      />
+                      Offers Delivery
+                    </label>
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="mb-4">
@@ -299,6 +359,16 @@ const RegisterPage = () => {
                     onChange={handleChange}
                     className="form-input pl-10"
                     placeholder={"Street address"}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-700">
+                    City, State & ZIP
+                  </h3>
+                  <LocationDetector
+                    onLocationDetected={handleLocationDetected}
+                    isLoading={loading}
                   />
                 </div>
 
