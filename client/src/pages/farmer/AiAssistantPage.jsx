@@ -34,7 +34,8 @@ import {
     FaStop,
     FaVolumeUp,
     FaSpinner,
-    FaWaveSquare
+    FaWaveSquare,
+    FaBox
 } from "react-icons/fa";
 
 const AiAssistantPage = () => {
@@ -199,6 +200,66 @@ const AiAssistantPage = () => {
             en: "Show me all my inventory",
             hi: "मेरा सारा स्टॉक दिखाएं",
             category: "Stock Management"
+        },
+        {
+            en: "Reduce mango stock by 2 kg",
+            hi: "आम का स्टॉक 2 किलो कम करें",
+            bn: "আম স্টক ২ কেজি কমান",
+            te: "మామిడి స्টाక్‌ను 2 కిలోలు తగ్గించండి",
+            mr: "आंब्याचा साठा 2 किलो कमी करा",
+            ta: "மாம்பழ ஸ்டாக்கை 2 கிலோ குறைக்கவும்",
+            gu: "કેરીનો સ્ટોક 2 કિલો ઘટાડો",
+            kn: "ಮಾವಿನ ಸ್ಟಾಕ್ ಅನ್ನು 2 ಕಿಲೋ ಕಡಿಮೆ ಮಾಡಿ",
+            ml: "മാമ്പഴ സ്റ്റോക്ക് 2 കിലോ കുറയ്ക്കുക",
+            pa: "ਅੰਬ ਦਾ ਸਟਾਕ 2 ਕਿਲੋ ਘਟਾਓ",
+            or: "ଆମ୍ବ ଷ୍ଟକ୍ 2 କିଲୋ କମ୍ କରନ୍ତୁ",
+            as: "আম ষ্টক ২ কিলো কমাওক",
+            ur: "آم کا اسٹاک 2 کلو کم کریں",
+            category: "Inventory Management",
+            category_hi: "स्टॉक प्रबंधन",
+            category_bn: "স্টক ব্যবস্থাপনা",
+            category_te: "స्टाक్ నిర్వహణ",
+            category_mr: "साठा व्यवस्थापन",
+            category_ta: "இருப்பு மேলாண்மை",
+            category_gu: "સ્ટોક મેનેજમેન્ટ",
+            category_kn: "ಸ್ಟಾಕ್ ನಿರ್ವಹಣೆ",
+            category_ml: "സ്റ്റോക്ക് മാനേജ്മെന്റ്",
+            category_pa: "ਸਟਾਕ ਪ੍ਰਬੰਧਨ",
+            category_or: "ଷ୍ଟକ୍ ପରିଚାଳନା",
+            category_as: "ষ্টক ব্যৱস্থাপনা",
+            category_ur: "اسٹاک مینجمنٹ"
+        },
+        {
+            en: "Add 5 kg harvested tomatoes to inventory",
+            hi: "5 किलो काटे गए टमाटर स्टॉक में जोड़ें",
+            bn: "5 কেজি কাটা টমেটো স্টকে যোগ করুন",
+            te: "5 కిలోల కోసిన టమాటాలను स्टाक్‌లో జోడించండి",
+            mr: "5 किलो कापलेले टोमॅटो साठ्यात जोडा",
+            ta: "5 கிலோ அறுவடை செய்த தக்காளியை ஸ்டாக்கில் சேர்க்கவும்",
+            gu: "5 કિલો કાપેલા ટમેટા સ્ટોકમાં ઉમેરો",
+            kn: "5 ಕಿಲೋ ಕೊಯ್ದ ಟೊಮೇಟೊಗಳನ್ನು ಸ್ಟಾಕ್‌ಗೆ ಸೇರಿಸಿ",
+            ml: "5 കിലോ കൊയ്ത തക്കാളി സ്റ്റോക്കിൽ ചേർക്കുക",
+            pa: "5 ਕਿਲੋ ਕਟੇ ਟਮਾਟਰ ਸਟਾਕ ਵਿੱਚ ਜੋੜੋ",
+            or: "5 କିଲୋ କଟା ଟମାଟୋ ଷ୍ଟକରେ ଯୋଗ କରନ୍ତୁ",
+            as: "5 কিলো কটা টমেটো ষ্টকত যোগ কৰক",
+            ur: "5 کلو کاٹے گئے ٹماٹر اسٹاک میں شامل کریں",
+            category: "Inventory Management"
+        },
+        {
+            en: "I sold 3 kg onions, update my stock",
+            hi: "मैंने 3 किलो प्याज बेचे, मेरा स्टॉक अपडेट करें",
+            bn: "আমি 3 কেজি পেঁয়াজ বিক্রি করেছি, আমার স্টক আপডেট করুন",
+            te: "నేను 3 కిలోల ఉల్లిపాయలు అమ్మాను, నా స्టाక్‌ను అప్‌డేట్ చేయండి",
+            mr: "मी 3 किलो कांदे विकले, माझा साठा अद्ययावत करा",
+            ta: "நான் 3 கிலோ வெங்காயம் விற்றேன், எனது ஸ்டாக்கை புதுப்பிக்கவும்",
+            gu: "મેં 3 કિલો ડુંગળી વેચ્યા, મારો સ્ટોક અપડેટ કરો",
+            kn: "ನಾನು 3 ಕಿಲೋ ಈರುಳ್ಳಿ ಮಾರಿದೆ, ನನ್ನ ಸ್ಟಾಕ್ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ",
+            ml: "ഞാൻ 3 കിലോ ഉള്ളി വിറ്റു, എന്റെ സ്റ്റോക്ക് അപ്ഡേറ്റ് ചെയ്യുക",
+            pa: "ਮੈਂ 3 ਕਿਲੋ ਪਿਆਜ਼ ਵੇਚੇ, ਮੇਰਾ ਸਟਾਕ ਅਪਡੇਟ ਕਰੋ",
+            or: "ମୁଁ 3 କିଲୋ ପିଆଜ ବିକ୍ରି କଲି, ମୋର ଷ୍ଟକ୍ ଅପଡେଟ୍ କରନ୍ତୁ",
+            as: "মই 3 কিলো পিয়াজ বিক্ৰী কৰিলোঁ, মোৰ ষ্টক আপডেট কৰক",
+            ur: "میں نے 3 کلو پیاز بیچے، میرا اسٹاک اپڈیٹ کریں",
+            category: "Inventory Management"
         },
         {
             en: "How to control pest attacks on tomato plants?",
@@ -731,11 +792,85 @@ const AiAssistantPage = () => {
                                                                                     <p className="text-gray-600 italic">{conversation.displayAnswer.message}</p>
                                                                                 )}
                                                                             </div>
+                                                                        ) : conversation.hasDisplayData && conversation.type === 'inventory_update' && conversation.updateSuccess && conversation.displayAnswer.product ? (
+                                                                            /* Inventory Update Success Display */
+                                                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                                                <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
+                                                                                    <FaBox className="mr-2" />
+                                                                                    Inventory Updated Successfully
+                                                                                </h4>
+
+                                                                                <div className="bg-white rounded-lg p-3 border border-blue-100">
+                                                                                    <div className="flex justify-between items-start mb-3">
+                                                                                        <div>
+                                                                                            <h5 className="font-medium text-gray-800">{conversation.displayAnswer.product.name}</h5>
+                                                                                        </div>
+                                                                                        <div className="text-right">
+                                                                                            <p className="font-semibold text-blue-600">₹{conversation.displayAnswer.product.currentValue}</p>
+                                                                                            <p className="text-xs text-gray-500">Current Value</p>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <div className="grid grid-cols-3 gap-3 text-sm mb-3">
+                                                                                        <div className="text-center">
+                                                                                            <p className="text-gray-600">Previous</p>
+                                                                                            <p className="font-medium text-gray-800">{conversation.displayAnswer.product.oldQuantity} {conversation.displayAnswer.product.unit}</p>
+                                                                                        </div>
+                                                                                        <div className="text-center">
+                                                                                            <p className="text-gray-600">Change</p>
+                                                                                            <p className={`font-medium ${conversation.displayAnswer.product.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                                                {conversation.displayAnswer.product.change >= 0 ? '+' : ''}{conversation.displayAnswer.product.change} {conversation.displayAnswer.product.unit}
+                                                                                            </p>
+                                                                                        </div>
+                                                                                        <div className="text-center">
+                                                                                            <p className="text-gray-600">Current</p>
+                                                                                            <p className="font-medium text-blue-600">{conversation.displayAnswer.product.newQuantity} {conversation.displayAnswer.product.unit}</p>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <div className="pt-2 border-t border-gray-100">
+                                                                                        <p className="text-xs text-gray-600">
+                                                                                            Price: ₹{conversation.displayAnswer.product.price} per {conversation.displayAnswer.product.unit}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : conversation.hasDisplayData && conversation.type === 'disambiguation_needed' && conversation.displayAnswer.products ? (
+                                                                            /* Product Disambiguation Display */
+                                                                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                                                                <h4 className="font-semibold text-yellow-800 mb-3 flex items-center">
+                                                                                    <FaLightbulb className="mr-2" />
+                                                                                    Multiple Products Found
+                                                                                </h4>
+
+                                                                                <p className="text-sm text-gray-700 mb-3">
+                                                                                    Please specify which product you want to update:
+                                                                                </p>
+
+                                                                                <div className="grid gap-2">
+                                                                                    {conversation.displayAnswer.products.map((product, index) => (
+                                                                                        <div key={index} className="bg-white rounded-lg p-3 border border-yellow-100 flex justify-between items-center">
+                                                                                            <div>
+                                                                                                <h5 className="font-medium text-gray-800">{product.name}</h5>
+                                                                                                <p className="text-sm text-gray-600">₹{product.price} per {product.unit}</p>
+                                                                                            </div>
+                                                                                            <div className="text-right">
+                                                                                                <p className="font-medium text-gray-800">{product.quantity} {product.unit}</p>
+                                                                                                <p className="text-xs text-gray-500">Available</p>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
                                                                         ) : (
                                                                             /* Regular detailed text response */
                                                                             <div className="prose prose-sm max-w-none">
                                                                                 <p className="text-sm lg:text-base text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
-                                                                                    {conversation.displayAnswer || conversation.processedAnswer || conversation.answer}
+                                                                                    {typeof conversation.displayAnswer === 'string'
+                                                                                        ? conversation.displayAnswer
+                                                                                        : conversation.displayAnswer?.message
+                                                                                        || conversation.processedAnswer
+                                                                                        || conversation.answer}
                                                                                 </p>
                                                                             </div>
                                                                         )}

@@ -1,6 +1,165 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Product = require("../models/ProductModel");
 
+// Helper function to detect if query is an instruction vs question
+const isInstruction = (query) => {
+    const instructionIndicators = [
+        // English imperatives
+        'add', 'increase', 'decrease', 'reduce', 'set', 'update', 'remove', 'take out', 'put in',
+        
+        // Hindi imperatives
+        'बढ़ा दो', 'घटा दो', 'कम कर दो', 'ज्यादा कर दो', 'जोड़ दो', 'निकाल दो', 'सेट कर दो',
+        'बढ़ाओ', 'घटाओ', 'कम करो', 'ज्यादा करो', 'जोड़ो', 'निकालो', 'सेट करो', 'अपडेट करो',
+        'हटाओ', 'हटा दो', 'डालो', 'डाल दो', 'बेचो', 'बेच दो', 'काटो', 'काट दो',
+        
+        // Bengali imperatives
+        'বাড়াও', 'বাড়িয়ে দাও', 'কমাও', 'কমিয়ে দাও', 'জোড় করো', 'সরাও', 'সরিয়ে দাও',
+        'সেট করো', 'সেট কর', 'আপডেট করো', 'আপডেট কর', 'তুলে নাও', 'ফেলে দাও',
+        
+        // Telugu imperatives
+        'పెంচు', 'పెంచండি', 'తగ్గించు', 'తగ్గించండি', 'జోడించు', 'జোడించండి', 'తీసేయ్', 'తీసెయ్యండি',
+        'సెట్ చేయ్', 'సెట్ చేయండి', 'అప్‌డేట్ చేయండి', 'మార్చు', 'మార్చండి',
+        
+        // Marathi imperatives
+        'वाढवा', 'वाढव', 'घटवा', 'घटव', 'जोडा', 'जोड', 'काढा', 'काढ', 'सेट करा', 'सेट कर',
+        'अपडेट करा', 'अपडेट कर', 'बदला', 'बदल',
+        
+        // Tamil imperatives
+        'கூட्டு', 'கூट्टु', 'குறैच्चु', 'குறैच्चेय्', 'सेट पण्णु', 'सेट पण्णेय्',
+        
+        // Gujarati imperatives
+        'વધારો', 'વધાર', 'ઘટાડો', 'ઘટાડ', 'જોડો', 'જોડ', 'સેટ કરો', 'સેટ કર',
+        
+        // Kannada imperatives
+        'ಹೆಚ್ಚಿಸು', 'ಹೆಚ್ಚಿಸಿ', 'ಕಡಿಮೆಮಾಡು', 'ಕಡಿಮೆಮಾಡಿ', 'ಸೇರಿಸು', 'ಸೇರಿಸಿ',
+        
+        // Malayalam imperatives
+        'കൂട്ടുക', 'കൂട്ടൂ', 'കുറയ്ക്കുക', 'കുറയ്ക്കൂ', 'സെറ്റ് ചെയ്യുക', 'സെറ്റ് ചെയ്യൂ',
+        
+        // Punjabi imperatives
+        'ਵਧਾਓ', 'ਵਧਾ', 'ਘਟਾਓ', 'ਘਟਾ', 'ਜੋੜੋ', 'ਜੋੜ', 'ਸੈੱਟ ਕਰੋ',
+        
+        // Urdu imperatives
+        'بڑھاؤ', 'بڑھا', 'کم کرو', 'کم کر', 'جوڑو', 'جوڑ', 'سیٹ کرو'
+    ];
+    
+    // Question indicators
+    const questionIndicators = [
+        // English
+        'how much', 'how many', 'what is', 'what are', 'do i have', 'show me', 'tell me',
+        
+        // Hindi
+        'कितना', 'कितनी', 'कितने', 'क्या है', 'मेरे पास', 'दिखाओ', 'बताओ', 'कहाँ है',
+        
+        // Bengali
+        'কত', 'কতটুকু', 'কি আছে', 'দেখাও', 'বলো', 'কোথায়',
+        
+        // Telugu
+        'ఎంత', 'ఎన్ని', 'ఏమిటి', 'చూపించు', 'చెప్పు', 'ఎక్కడ',
+        
+        // Marathi
+        'किती', 'काय आहे', 'दाखवा', 'सांगा', 'कुठे आहे'
+    ];
+    
+    const lowerQuery = query.toLowerCase();
+    
+    // Check for question words first (questions have priority in ambiguous cases)
+    const hasQuestionWords = questionIndicators.some(indicator => 
+        lowerQuery.includes(indicator.toLowerCase())
+    );
+    
+    if (hasQuestionWords) {
+        return false; // It's a question
+    }
+    
+    // Check for instruction words
+    const hasInstructionWords = instructionIndicators.some(indicator => 
+        lowerQuery.includes(indicator.toLowerCase())
+    );
+    
+    return hasInstructionWords;
+};
+
+// Helper function to detect inventory update queries in multiple languages
+const isInventoryUpdateQuery = (query) => {
+    const updateKeywords = [
+        // English (expanded with more patterns)
+        'update', 'modify', 'change', 'adjust', 'edit', 'increase', 'decrease', 'reduce', 'add to', 'add in',
+        'add', 'remove', 'subtract', 'set', 'make', 'take out', 'sold', 'harvest', 'picked', 'put in',
+        'collected', 'used', 'consumed', 'wasted', 'damaged', 'spoiled', 'expired', 'from stock', 'to stock',
+        'delivered', 'shipped', 'supplied', 'dumped', 'lost', 'burnt', 'rotten', 'destroyed', 'में से', 'में',
+
+        // Hinglish & spoken forms (expanded)
+        'bech diya', 'becha', 'bech do', 'add karo', 'add kar do', 'nikal diya', 'nikal do', 'ghatao', 'ghata do', 'badhao', 'badha do',
+        'kat gaya', 'kat liya', 'kat chuka', 'use kiya', 'use kar do', 'khatam ho gaya', 'kha gaya', 'kam karo', 'kam kar do',
+        'fek diya', 'saara gaya', 'dal diya', 'dal do', 'bacha nahi', 'kharab ho gaya', 'pura bech diya', 'jyada karo', 'jyada kar do',
+        'mila', 'mil gaya', 'wapas mila', 'de diya', 'utha liya', 'khaali ho gaya', 'set karo', 'set kar do', 'update karo',
+
+        // ✅ Hindi (expanded native script with imperative forms)
+        'अपडेट', 'बदलना', 'बदलाव', 'घटाना', 'घटाओ', 'घटा दो', 'कम करना', 'कम करो', 'कम कर दो', 'कम', 
+        'बढ़ाना', 'बढ़ाओ', 'बढ़ा दो', 'ज्यादा करना', 'ज्यादा करो', 'ज्यादा कर दो', 'अधिक करो', 'अधिक कर दो',
+        'सेट', 'सेट करो', 'सेट कर दो', 'हटाना', 'हटाओ', 'हटा दो', 'निकालना', 'निकालो', 'निकाल दिया', 'निकाल दो', 
+        'बेचना', 'बेच दिया', 'बेचो', 'बेच दो', 'काटना', 'काट दिया', 'काटो', 'काट दो', 'तोड़ा', 'तोड़ो', 'तोड़ दो',
+        'इस्तेमाल करना', 'इस्तेमाल किया', 'इस्तेमाल करो', 'उपयोग करो', 'खराब', 'सड़ा', 'जोड़ो', 'जोड़ दो',
+        'समाप्त', 'ख़त्म', 'खत्म हो गया', 'दिया', 'भेजा', 'नष्ट', 'फेंका', 'फेंक दिया', 'डालो', 'डाल दो',
+
+        // Bengali (expanded with imperatives)
+        'কমাও', 'কমিয়ে দাও', 'বাড়াও', 'বাড়িয়ে দাও', 'সরাও', 'সরিয়ে দাও', 'উঠাও', 'উঠিয়ে নাও', 
+        'বিক্রি করো', 'বিক্রি কর', 'ব্যবহার করো', 'ব্যবহার কর', 'ফেলে দাও', 'ফেল', 'নষ্ট হয়ে গেছে',
+        'শেষ হয়ে গেছে', 'দিয়ে দাও', 'দাও', 'নষ্ট', 'শেষ', 'কাট', 'কেটে দাও', 'তোল', 'তুলে নাও', 'খারাপ',
+        'যোগ করো', 'যোগ কর', 'বিয়োগ করো', 'বিয়োগ কর', 'সেট করো', 'সেট কর',
+
+        // Telugu (expanded with imperatives)
+        'తగ్గించండి', 'తగ్గించు', 'తగ్గించేయ్', 'పెంచండి', 'పెంచు', 'పెంచేయ్', 'తీసెయ్యండి', 'తీసేయ్', 'తీయండి',
+        'అమ్మండి', 'అమ్ము', 'అమ్మేయ్', 'వాడండి', 'వాడు', 'వాడేయ్', 'కత్తిరించండి', 'కత్తిరించు', 'పంపండి', 'పంపు',
+        'చెడ్డది', 'ఖతం', 'వెళ్లిపోయింది', 'తగ్గు', 'పెంచు', 'తీసు', 'వాడు', 'జోడించు', 'జోడించండి',
+        'సెట్ చేయండి', 'సెట్ చేయ్', 'అప్‌డేట్ చేయండి', 'మార్చండి', 'మార్చు',
+
+        // Marathi (expanded with imperatives)
+        'घटवा', 'घटव', 'कमी करा', 'कमी कर', 'वाढवा', 'वाढव', 'जास्त करा', 'जास्त कर', 'काढा', 'काढ',
+        'विकली', 'विका', 'विक', 'कापली', 'कापा', 'काप', 'वापरली', 'वापरा', 'वापर', 'खराब', 'संपली', 'संपवा',
+        'फेकली', 'फेका', 'फेक', 'गेली', 'नष्ट', 'दिली', 'दे', 'द्या', 'पाठवली', 'पाठवा', 'पाठव', 
+        'उपयोग केला', 'उपयोग करा', 'उपयोग कर', 'जोडा', 'जोड', 'सेट करा', 'सेट कर',
+
+        // Tamil
+        'குறைச்சு', 'அதிகச்சு', 'வாங்கினேன்', 'விற்றேன்', 'கழித்தேன்', 'அறுத்தேன்', 'பயன்படுத்தினேன்',
+        'அனுப்பினேன்', 'கெட்டது', 'முடிந்தது', 'போகட்டும்', 'நஷ்டம்', 'அழித்தேன்',
+
+        // Gujarati
+        'ઘટાડો', 'વધારો', 'કાઢો', 'વેચી નાખ્યું', 'વાપર્યું', 'કાપ્યું', 'ખરાબ', 'ફેંકી દીધું', 'નાશ',
+        'મોકલી', 'સમાપ્ત', 'નષ્ટ', 'દઈ દીધું', 'હટાવ્યું',
+
+        // Kannada
+        'ಕಡಿಮೆಮಾಡು', 'ಹೆಚ್ಚಿಸು', 'ತೆಗೆದುಹಾಕು', 'ಮಾರಿದೆ', 'ಬಳಸಿದೆ', 'ಕತ್ತರಿಸಿದೆ', 'ಹಾಳಾಗಿದೆ',
+        'ಕೊಟ್ಟಿದ್ದೇನೆ', 'ಕಳುಹಿಸಿದ್ದೇನೆ', 'ನಷ್ಟವಾಗಿದೆ', 'ತೊಡಗಿಸಲಾಗಿದೆ', 'ಮುಕ್ತವಾಗಿದೆ',
+
+        // Malayalam
+        'കുറയ്ക്കുക', 'കൂട്ടുക', 'എടുത്തു', 'വാങ്ങിയതും', 'ഉപയോഗിച്ചു', 'വില്പന', 'വിറ്റു',
+        'കഴിഞ്‌ഞു', 'മറക്കുക', 'അവസാനിച്ചു', 'പോകട്ടെ', 'നഷ്ടപ്പെട്ടു', 'കൊടുത്തു', 'കണ്ടില്ല',
+
+        // Punjabi
+        'ਘਟਾਓ', 'ਵਧਾਓ', 'ਕੱਢੋ', 'ਵਿੱਚਿਆ', 'ਕੱਟਿਆ', 'ਵਰਤਿਆ', 'ਦਿੱਤਾ', 'ਖਤਮ ਹੋ ਗਿਆ',
+        'ਭੇਜਿਆ', 'ਨਿਕਲ ਗਿਆ', 'ਖਰਾਬ', 'ਮਾਰਿਆ', 'ਸਾਫ਼ ਕੀਤਾ', 'ਹਟਾਇਆ',
+
+        // Odia
+        'କମାନ୍ତୁ', 'ଅଧିକ କରନ୍ତୁ', 'କାଢ଼ନ୍ତୁ', 'ବିକ୍ରି', 'ବ୍ୟବହାର', 'ଖରାପ', 'ଦେଲି', 'ପଠାଇଲି',
+        'ନଷ୍ଟ', 'ଅପଚୟ', 'ଖତମ', 'ଫେଙ୍କିଦିଅ', 'ସମାପ୍ତ',
+
+        // Assamese
+        'কমাওক', 'বঢ়াওক', 'উলিয়াওক', 'বিক্ৰী', 'ব্যৱহাৰ', 'নষ্ট', 'শেষ', 'পঠিয়ালোঁ',
+        'ফেকি দিলোঁ', 'ভাঙি গ’ল', 'নষ্ঠ', 'দিয়া', 'ল’লোঁ',
+
+        // Urdu
+        'کم کرو', 'زیادہ کرو', 'نکالو', 'بیچو', 'استعمال کیا', 'خراب ہو گیا', 'ختم',
+        'پھینک دیا', 'نکال دیا', 'دیا', 'بھیجا', 'ضائع', 'نقصان', 'خالی ہو گیا', 'جل گیا'
+    ];
+
+
+    return updateKeywords.some(keyword =>
+        query.toLowerCase().includes(keyword.toLowerCase())
+    );
+};
+
 // Helper function to detect stock-related queries in multiple languages
 const isStockQuery = (query) => {
     const stockKeywords = [
@@ -49,6 +208,208 @@ const isStockQuery = (query) => {
     return stockKeywords.some(keyword =>
         query.toLowerCase().includes(keyword.toLowerCase())
     );
+};
+
+// Helper function to parse inventory update using Gemini AI
+const parseInventoryUpdate = async (query, language, genAI) => {
+    try {
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 200,
+            }
+        });
+
+        const parsePrompt = `
+Parse this inventory update instruction and extract the following information:
+1. Product name (in English)
+2. Action (increase, decrease, set)
+3. Quantity (number only)
+4. Unit (if mentioned, otherwise return null)
+
+The query is an INSTRUCTION to update inventory. Understand the meaning and extract:
+- Product names (translate to English if needed)
+- Action words like: बढ़ा दो (add/increase), घटा दो (reduce/decrease), कम कर दो (reduce), ज्यादा कर दो (increase), 
+  सेट कर दो (set), add, increase, decrease, reduce, subtract, sold, used, take out, harvest, collected, set, update
+- Numerical values (including written numbers like दो=2, पांच=5, etc.)
+- Units like kg, किलो, lb, pieces, boxes, etc.
+
+Examples:
+"स्टॉक में आम 2 किलो बढ़ा दो" -> productName: "mango", action: "increase", quantity: 2, unit: "kg"
+"आम में 2 किलो बढ़ा दो" -> productName: "mango", action: "increase", quantity: 2, unit: "kg"  
+"उपलब्ध आम में से 2 किलो घटा दो" -> productName: "mango", action: "decrease", quantity: 2, unit: "kg"
+"टमाटर 5 किलो कम कर दो" -> productName: "tomato", action: "decrease", quantity: 5, unit: "kg"
+"Add 3 kg to rice" -> productName: "rice", action: "increase", quantity: 3, unit: "kg"
+
+Query: "${query}"
+
+IMPORTANT: 
+- For actions: use "decrease" for reducing/selling/using/घटाना/कम करना, "increase" for adding/harvesting/बढ़ाना/ज्यादा करना, "set" for setting specific amount/सेट करना
+- Convert written numbers to digits (दो=2, तीन=3, चार=4, पांच=5, etc.)
+- If the product name is generic, return the generic name
+- If it's specific variety, return the specific name
+
+Return ONLY a JSON object in this exact format:
+{
+  "productName": "product_name_in_english",
+  "action": "increase|decrease|set",
+  "quantity": number,
+  "unit": "unit_or_null",
+  "confidence": 0.0-1.0
+}`;
+
+        const result = await model.generateContent(parsePrompt);
+        const response = await result.response;
+        const text = response.text().trim();
+
+        try {
+            // Extract JSON from the response
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                return {
+                    productName: parsed.productName?.toLowerCase() || null,
+                    action: parsed.action || null,
+                    quantity: parsed.quantity || null,
+                    unit: parsed.unit || null,
+                    confidence: parsed.confidence || 0.5
+                };
+            }
+        } catch (parseError) {
+            console.error('JSON parsing error:', parseError);
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error parsing inventory update:', error);
+        return null;
+    }
+};
+
+// Helper function to find matching products for inventory update
+const findMatchingProducts = async (farmerId, productName) => {
+    try {
+        const query = {
+            farmer: farmerId,
+            isActive: true,
+            name: { $regex: productName, $options: 'i' }
+        };
+
+        const products = await Product.find(query)
+            .select('name quantityAvailable unit price category')
+            .populate('category', 'name')
+            .sort({ name: 1 });
+
+        return products;
+    } catch (error) {
+        console.error('Error finding matching products:', error);
+        return [];
+    }
+};
+
+// Helper function to update product inventory
+const updateProductInventory = async (productId, action, quantity, farmerId) => {
+    try {
+        const product = await Product.findOne({
+            _id: productId,
+            farmer: farmerId,
+            isActive: true
+        });
+
+        if (!product) {
+            return { success: false, message: "Product not found or access denied" };
+        }
+
+        let newQuantity;
+        switch (action) {
+            case 'increase':
+                newQuantity = product.quantityAvailable + quantity;
+                break;
+            case 'decrease':
+                newQuantity = Math.max(0, product.quantityAvailable - quantity);
+                break;
+            case 'set':
+                newQuantity = Math.max(0, quantity);
+                break;
+            default:
+                return { success: false, message: "Invalid action" };
+        }
+
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { quantityAvailable: newQuantity },
+            { new: true, runValidators: true }
+        ).populate('category', 'name');
+
+        return {
+            success: true,
+            product: updatedProduct,
+            oldQuantity: product.quantityAvailable,
+            newQuantity: newQuantity,
+            change: newQuantity - product.quantityAvailable
+        };
+    } catch (error) {
+        console.error('Error updating product inventory:', error);
+        return { success: false, message: "Failed to update inventory" };
+    }
+};
+
+// Helper function to generate inventory update response
+const generateInventoryUpdateResponse = async (updateResult, originalQuery, language, genAI) => {
+    try {
+        if (!updateResult.success) {
+            const errorMessage = updateResult.message || "Failed to update inventory";
+
+            if (language && language !== 'en') {
+                return await translateResponse(errorMessage, language, genAI);
+            }
+            return errorMessage;
+        }
+
+        const { product, oldQuantity, newQuantity, change } = updateResult;
+        const action = change > 0 ? 'increased' : change < 0 ? 'decreased' : 'set';
+
+        let response = `Successfully updated ${product.name} inventory. `;
+        response += `Quantity ${action} from ${oldQuantity} ${product.unit} to ${newQuantity} ${product.unit}. `;
+
+        if (change !== 0) {
+            response += `Change: ${change > 0 ? '+' : ''}${change} ${product.unit}. `;
+        }
+
+        response += `Current stock value: ₹${(newQuantity * product.price).toFixed(2)}.`;
+
+        if (language && language !== 'en') {
+            return await translateResponse(response, language, genAI);
+        }
+
+        return response;
+    } catch (error) {
+        console.error('Error generating inventory update response:', error);
+        return "Inventory updated successfully.";
+    }
+};
+
+// Helper function to handle disambiguation when multiple products match
+const generateDisambiguationResponse = async (products, originalQuery, language, genAI) => {
+    try {
+        let response = "I found multiple products matching your query. Please specify which one you want to update:\n\n";
+
+        products.forEach((product, index) => {
+            response += `${index + 1}. ${product.name} (${product.quantityAvailable} ${product.unit} available)\n`;
+        });
+
+        response += "\nPlease specify the exact product name or mention more details.";
+
+        if (language && language !== 'en') {
+            return await translateResponse(response, language, genAI);
+        }
+
+        return response;
+    } catch (error) {
+        console.error('Error generating disambiguation response:', error);
+        return "Multiple products found. Please be more specific.";
+    }
 };
 
 // Helper function to extract product name from query using Gemini
@@ -251,23 +612,41 @@ const translateResponse = async (text, targetLanguage, genAI) => {
         };
 
         const translatePrompt = `
-Translate this farming stock information to ${languageNames[targetLanguage] || targetLanguage} language. 
-Keep the following elements unchanged:
-- Product names (translate common names but keep specific variety names)
-- Numbers and quantities
-- Currency symbols (₹)
-- Date formats
+TASK: Translate farming text to ${languageNames[targetLanguage] || targetLanguage}.
 
-Be natural and conversational in your translation. Use proper farming terminology in the target language.
+RULES:
+- Start immediately with translated content (NO "Translation:", "अनुवाद:", etc.)
+- Keep: product names, numbers, ₹ symbols, dates
+- Be natural and conversational
+- Use proper farming terms
 
-Text to translate:
-"${text}"
+Text: "${text}"
 
-Translation in ${languageNames[targetLanguage] || targetLanguage}:`;
+${languageNames[targetLanguage] || targetLanguage} version:`;
 
         const translateResult = await model.generateContent(translatePrompt);
         const translateResponse = await translateResult.response;
-        return translateResponse.text().trim();
+        let translatedText = translateResponse.text().trim();
+
+        // Clean up any translation prefixes
+        translatedText = translatedText
+            .replace(/^(translation\s*in\s*\w+)[:\s,.]*/gi, '')
+            .replace(/^(अनुवाद)[:\s,.]*/gi, '')
+            .replace(/^(অনুবাদ)[:\s,.]*/gi, '')
+            .replace(/^(అనువాదం)[:\s,.]*/gi, '')
+            .replace(/^(भाषांतर)[:\s,.]*/gi, '')
+            .replace(/^(மொழிபெயர்ப்பு)[:\s,.]*/gi, '')
+            .replace(/^(અનુવાદ)[:\s,.]*/gi, '')
+            .replace(/^(ಅನುವಾದ)[:\s,.]*/gi, '')
+            .replace(/^(പരിഭാഷ)[:\s,.]*/gi, '')
+            .replace(/^(ਅਨੁਵਾਦ)[:\s,.]*/gi, '')
+            .replace(/^(ଅନୁବାଦ)[:\s,.]*/gi, '')
+            .replace(/^(অনুবাদ)[:\s,.]*/gi, '')
+            .replace(/^(ترجمہ)[:\s,.]*/gi, '')
+            .replace(/^[:\-\s]*/, '')
+            .trim();
+
+        return translatedText;
     } catch (error) {
         console.error('Translation error:', error);
         return text; // Return original text if translation fails
@@ -299,6 +678,175 @@ exports.askFarmingQuery = async (req, res) => {
 
         // Initialize Gemini AI
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+        // Check if this is an inventory update query
+        if (isInventoryUpdateQuery(query)) {
+            // First check if it's an instruction vs question
+            if (!isInstruction(query)) {
+                // It's a question about inventory, not an instruction to update
+                // Handle as stock query instead
+                try {
+                    const productName = await extractProductFromQuery(query, language, genAI);
+                    const products = await getFarmerStock(farmerId, productName);
+
+                    const speechResponse = formatStockResponseForSpeech(products, query, productName);
+                    const displayResponse = formatStockResponseForDisplay(products, query, productName);
+
+                    let finalSpeechResponse = speechResponse;
+                    if (language && language !== 'en') {
+                        finalSpeechResponse = await translateResponse(speechResponse, language, genAI);
+                    }
+
+                    return res.json({
+                        success: true,
+                        data: {
+                            query: query,
+                            answer: finalSpeechResponse,
+                            speechAnswer: finalSpeechResponse,
+                            displayAnswer: displayResponse,
+                            language: language || 'en',
+                            type: 'stock_inquiry',
+                            hasDisplayData: true
+                        }
+                    });
+                } catch (stockError) {
+                    console.error('Stock query error:', stockError);
+                    const errorMessage = language && language !== 'en'
+                        ? await translateResponse("Sorry, I couldn't fetch your stock information at the moment.", language, genAI)
+                        : "Sorry, I couldn't fetch your stock information at the moment.";
+
+                    return res.json({
+                        success: true,
+                        data: {
+                            query: query,
+                            answer: errorMessage,
+                            speechAnswer: errorMessage,
+                            displayAnswer: errorMessage,
+                            language: language || 'en',
+                            type: 'error',
+                            hasDisplayData: false
+                        }
+                    });
+                }
+            }
+
+            // It's an instruction to update inventory
+            try {
+                // Parse the inventory update request
+                const updateRequest = await parseInventoryUpdate(query, language, genAI);
+
+                if (!updateRequest || !updateRequest.productName || !updateRequest.action || !updateRequest.quantity) {
+                    const clarificationMessage = language && language !== 'en'
+                        ? await translateResponse("I couldn't understand your inventory update instruction. Please specify the product name, action (increase/decrease/set), and quantity clearly. For example: 'Add 5 kg to tomatoes' or 'आम में 2 किलो बढ़ा दो'", language, genAI)
+                        : "I couldn't understand your inventory update instruction. Please specify the product name, action (increase/decrease/set), and quantity clearly. For example: 'Add 5 kg to tomatoes' or 'आम में 2 किलो बढ़ा दो'";
+
+                    return res.json({
+                        success: true,
+                        data: {
+                            query: query,
+                            answer: clarificationMessage,
+                            speechAnswer: clarificationMessage,
+                            displayAnswer: clarificationMessage,
+                            language: language || 'en',
+                            type: 'clarification_needed',
+                            hasDisplayData: false
+                        }
+                    });
+                }
+
+                // Find matching products
+                const matchingProducts = await findMatchingProducts(farmerId, updateRequest.productName);
+
+                if (matchingProducts.length === 0) {
+                    const notFoundMessage = language && language !== 'en'
+                        ? await translateResponse(`No products found matching "${updateRequest.productName}". Please check the product name and try again.`, language, genAI)
+                        : `No products found matching "${updateRequest.productName}". Please check the product name and try again.`;
+
+                    return res.json({
+                        success: true,
+                        data: {
+                            query: query,
+                            answer: notFoundMessage,
+                            speechAnswer: notFoundMessage,
+                            displayAnswer: notFoundMessage,
+                            language: language || 'en',
+                            type: 'product_not_found',
+                            hasDisplayData: false
+                        }
+                    });
+                }
+
+                // If multiple products match and the request is generic, ask for clarification
+                if (matchingProducts.length > 1 && updateRequest.confidence < 0.8) {
+                    const disambiguationResponse = await generateDisambiguationResponse(matchingProducts, query, language, genAI);
+
+                    return res.json({
+                        success: true,
+                        data: {
+                            query: query,
+                            answer: disambiguationResponse,
+                            speechAnswer: disambiguationResponse,
+                            displayAnswer: {
+                                message: disambiguationResponse,
+                                products: matchingProducts.map(p => ({
+                                    id: p._id,
+                                    name: p.name,
+                                    quantity: p.quantityAvailable,
+                                    unit: p.unit,
+                                    price: p.price
+                                }))
+                            },
+                            language: language || 'en',
+                            type: 'disambiguation_needed',
+                            hasDisplayData: true
+                        }
+                    });
+                }
+
+                // Use the first (most relevant) product for update
+                const targetProduct = matchingProducts[0];
+
+                // Update the inventory
+                const updateResult = await updateProductInventory(
+                    targetProduct._id,
+                    updateRequest.action,
+                    updateRequest.quantity,
+                    farmerId
+                );
+
+                // Generate response
+                const responseMessage = await generateInventoryUpdateResponse(updateResult, query, language, genAI);
+
+                return res.json({
+                    success: true,
+                    data: {
+                        query: query,
+                        answer: responseMessage,
+                        speechAnswer: responseMessage,
+                        displayAnswer: updateResult.success ? {
+                            message: responseMessage,
+                            product: {
+                                id: updateResult.product._id,
+                                name: updateResult.product.name,
+                                oldQuantity: updateResult.oldQuantity,
+                                newQuantity: updateResult.newQuantity,
+                                change: updateResult.change,
+                                unit: updateResult.product.unit,
+                                price: updateResult.product.price,
+                                currentValue: (updateResult.newQuantity * updateResult.product.price).toFixed(2)
+                            }
+                        } : responseMessage,
+                        language: language || 'en',
+                        type: 'inventory_update',
+                        hasDisplayData: updateResult.success,
+                        updateSuccess: updateResult.success
+                    }
+                });
+            } catch (updateError) {
+                console.error('Inventory update error:', updateError);
+                // Fall through to regular AI query if update fails
+            }
+        }
 
         // Check if this is a stock-related query
         if (isStockQuery(query)) {
@@ -488,6 +1036,51 @@ exports.getSampleQueries = async (req, res) => {
                 or: "ମୋର ସମସ୍ତ ତାଲିକା ଦେଖାନ୍ତୁ",
                 as: "মোৰ সকলো তালিকা দেখুৱাওক",
                 ur: "میری تمام فہرست دکھائیں"
+            },
+            {
+                en: "Reduce mango stock by 2 kg",
+                hi: "आम का स्टॉक 2 किलो कम करें",
+                bn: "আম স্টক ২ কেজি কমান",
+                te: "మామిడి స్టాక్‌ను 2 కిలోలు తగ్గించండి",
+                mr: "आंब्याचा साठा 2 किलो कमी करा",
+                ta: "மாம்பழ ஸ்டாக்கை 2 கிலோ குறைக்கவும்",
+                gu: "કેરીનો સ્ટોક 2 કિલો ઘટાડો",
+                kn: "ಮಾವಿನ ಸ್ಟಾಕ್ ಅನ್ನು 2 ಕಿಲೋ ಕಡಿಮೆ ಮಾಡಿ",
+                ml: "മാമ്പഴ സ്റ്റോക്ക് 2 കിലോ കുറയ്ക്കുക",
+                pa: "ਅੰਬ ਦਾ ਸਟਾਕ 2 ਕਿਲੋ ਘਟਾਓ",
+                or: "ଆମ୍ବ ଷ୍ଟକ୍ 2 କିଲୋ କମ୍ କରନ୍ତୁ",
+                as: "আম ষ্টক ২ কিলো কমাওক",
+                ur: "آم کا اسٹاک 2 کلو کم کریں"
+            },
+            {
+                en: "Add 5 kg harvested tomatoes to inventory",
+                hi: "5 किलो काटे गए टमाटर स्टॉक में जोड़ें",
+                bn: "5 কেজি কাটা টমেটো স্টকে যোগ করুন",
+                te: "5 కిలోల కోసిన టమాటాలను స్టాక్‌లో జోడించండి",
+                mr: "5 किलो कापलेले टोमॅटो साठ्यात जोडा",
+                ta: "5 கிலோ அறுவடை செய்த தக்காளியை ஸ்டாக்கில் சேர்க்கவும்",
+                gu: "5 કિલો કાપેલા ટમેટા સ્ટોકમાં ઉમેરો",
+                kn: "5 ಕಿಲೋ ಕೊಯ್ದ ಟೊಮೇಟೊಗಳನ್ನು ಸ್ಟಾಕ್‌ಗೆ ಸೇರಿಸಿ",
+                ml: "5 കിലോ കൊയ്ത തക്കാളി സ്റ്റോക്കിൽ ചേർക്കുക",
+                pa: "5 ਕਿਲੋ ਕਟੇ ਟਮਾਟਰ ਸਟਾਕ ਵਿੱਚ ਜੋੜੋ",
+                or: "5 କିଲୋ କଟା ଟମାଟୋ ଷ୍ଟକରେ ଯୋଗ କରନ୍ତୁ",
+                as: "5 কিলো কটা টমেটো ষ্টকত যোগ কৰক",
+                ur: "5 کلو کاٹے گئے ٹماٹر اسٹاک میں شامل کریں"
+            },
+            {
+                en: "I sold 3 kg onions, update my stock",
+                hi: "मैंने 3 किलो प्याज बेचे, मेरा स्टॉक अपडेट करें",
+                bn: "আমি 3 কেজি পেঁয়াজ বিক্রি করেছি, আমার স্টক আপডেট করুন",
+                te: "నేను 3 కిలోల ఉల్లిపాయలు అమ్మాను, నా స్టాక్‌ను అప్‌డేట్ చేయండి",
+                mr: "मी 3 किलो कांदे विकले, माझा साठा अद्ययावत करा",
+                ta: "நான் 3 கிலோ வெங்காயம் விற்றேன், எனது ஸ்டாக்கை புதுப்பிக்கவும்",
+                gu: "મેં 3 કિલો ડુંગળી વેચ્યા, મારો સ્ટોક અપડેટ કરો",
+                kn: "ನಾನು 3 ಕಿಲೋ ಈರುಳ್ಳಿ ಮಾರಿದೆ, ನನ್ನ ಸ್ಟಾಕ್ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ",
+                ml: "ഞാൻ 3 കിലോ ഉള്ളി വിറ്റു, എന്റെ സ്റ്റോക്ക് അപ്ഡേറ്റ് ചെയ്യുക",
+                pa: "ਮੈਂ 3 ਕਿਲੋ ਪਿਆਜ਼ ਵੇਚੇ, ਮੇਰਾ ਸਟਾਕ ਅਪਡੇਟ ਕਰੋ",
+                or: "ମୁଁ 3 କିଲୋ ପିଆଜ ବିକ୍ରି କଲି, ମୋର ଷ୍ଟକ୍ ଅପଡେଟ୍ କରନ୍ତୁ",
+                as: "মই 3 কিলো পিয়াজ বিক্ৰী কৰিলোঁ, মোৰ ষ্টক আপডেট কৰক",
+                ur: "میں نے 3 کلو پیاز بیچے، میرا اسٹاک اپڈیٹ کریں"
             },
             {
                 en: "How many tomatoes are available?",
@@ -698,42 +1291,32 @@ exports.generateSmartSpeechText = async (req, res) => {
         const targetLanguage = languageNames[language] || 'English';
 
         const prompt = `
-Convert the following farming inventory text into natural, direct speech in ${targetLanguage}. Make it personal and to-the-point, like someone explaining their own stock.
+ROLE: You are a farmer speaking directly to another farmer.
 
-CRITICAL REQUIREMENTS:
-1. **Be Direct & Personal**: Use "you have" / "aapke paas" approach
-   - English: "You have 50 kg of rice at 25 rupees per kg"
-   - Hindi: "आपके पास पचास किलो चावल है, पच्चीस रुपये किलो के हिसाब से"
+TASK: Convert this text to natural speech in ${targetLanguage}. 
 
-2. **Include ALL Details BUT BE CONCISE**: 
-   - Exact quantities with units
-   - Complete prices (convert ₹25.00 to "twenty-five rupees" / "पच्चीस रुपये")
-   - ACTUAL harvest dates (not just "harvest date" - say the real date!)
-   - Organic status when applicable
+CRITICAL: START IMMEDIATELY with actual content. NO introductions, explanations, or meta-commentary.
 
-3. **Numbers**: 
-   - Always convert to words: "50" → "fifty" / "पचास"
-   - NEVER say ".00" - convert ₹25.00 to "twenty-five rupees"
+BAD Examples:
+❌ "Here's the English conversion..."
+❌ "यहाँ हिंदी में अनुवाद है..."
+❌ "Natural direct speech in English:"
+❌ "The translation is..."
 
-4. **Harvest Dates**: 
-   - MUST include the actual date: "harvested on 15 November 2024" → "15 नवंबर को काटा गया"
-   - Don't skip dates - they're crucial information!
+GOOD Examples:
+✅ "You have fifty kilograms of rice..."
+✅ "आपके पास पचास किलो चावल है..."
+✅ "আপনার কাছে পঞ্চাশ কিলো চাল আছে..."
 
-5. **Flow**: 
-   - Remove list formatting
-   - Make it conversational but complete
-   - End with totals: "In total, you have..." / "कुल मिलाकर आपके पास..."
+RULES:
+- Be direct: "You have..." / "आपके पास..." / "আপনার..."
+- Convert numbers to words: "50" → "fifty" / "पचास" / "পঞ্চাশ"
+- Include quantities, prices, dates
+- Be conversational but complete
 
-6. **Language Style**:
-   - Hindi: Use "आपके पास" (you have), natural farm terms
-   - English: Use "you have", clear farmer language
-   - Keep it simple but comprehensive
-   - Be concise - don't repeat information
+Text: "${text}"
 
-Text to convert:
-"${text}"
-
-Natural, direct speech in ${targetLanguage} (include ALL details, especially harvest dates, but be concise):
+Response (${targetLanguage}, direct content only):
         `.trim();
 
         const result = await model.generateContent(prompt);
@@ -752,80 +1335,148 @@ Natural, direct speech in ${targetLanguage} (include ALL details, especially har
             .replace(/\*(.*?)\*/g, '$1')
             .trim();
 
-        // Remove unwanted response prefixes in all languages
+        // Final aggressive cleanup for meta-commentary
+        smartText = smartText
+            // Remove meta-commentary about conversation/translation
+            .replace(/^(direct\s*speech\s*in\s*\w+)[:\s,.]*/gi, '')
+            .replace(/^(प्रत्यक्ष\s*भाषण)[:\s,.]*/gi, '')
+            .replace(/^(সরাসরি\s*বক্তৃতা)[:\s,.]*/gi, '')
+            .replace(/^(ప్రత్యక్ష\s*ప్రసంగం)[:\s,.]*/gi, '')
+            .replace(/^(थेट\s*भाषण)[:\s,.]*/gi, '')
+            .replace(/^(நேரடি\s*பேச்சு)[:\s,.]*/gi, '')
+            .replace(/^(સીધું\s*ભાષણ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(നേരിട്ടുള്ള\s*പ്രസംഗം)[:\s,.]*/gi, '')
+            .replace(/^(ਸਿੱਧਾ\s*ਭਾਸ਼ਣ)[:\s,.]*/gi, '')
+            .replace(/^(ସିଧା\s*ଭାଷଣ)[:\s,.]*/gi, '')
+            .replace(/^(পোনপটীয়া\s*ভাষণ)[:\s,.]*/gi, '')
+            .replace(/^(براہ\s*راست\s*تقریر)[:\s,.]*/gi, '')
+
+            // Remove any remaining colons or markers at the start
+            .replace(/^[:\-\s]*/, '')
+            .trim();
+
+        // Enhanced cleanup for meta-commentary and unwanted prefixes
         const unwantedPrefixes = [
-            // English prefixes
-            /^(ok,?\s*)?here'?s?\s*(the\s*)?(direct\s*)?speech\s*(conversion|text|response)[:\s,.]*/gi,
-            /^(ok,?\s*)?here\s*is\s*(the\s*)?(direct\s*)?speech\s*(conversion|text|response)[:\s,.]*/gi,
-            /^(alright,?\s*)?here'?s?\s*(your\s*)?(direct\s*)?speech\s*(conversion|text|response)[:\s,.]*/gi,
-            /^(sure,?\s*)?here'?s?\s*(the\s*)?(converted\s*)?speech[:\s,.]*/gi,
+            // English prefixes (Comprehensive)
+            /^(ok,?\s*)?here'?s?\s*(the\s*)?(english\s*)?(direct\s*)?speech\s*(conversion|text|response)[:\s,.]*/gi,
+            /^(ok,?\s*)?here\s*is\s*(the\s*)?(english\s*)?(direct\s*)?speech\s*(conversion|text|response)[:\s,.]*/gi,
+            /^(alright,?\s*)?here'?s?\s*(your\s*)?(english\s*)?(direct\s*)?speech\s*(conversion|text|response)[:\s,.]*/gi,
+            /^(sure,?\s*)?here'?s?\s*(the\s*)?(english\s*)?(converted\s*)?speech[:\s,.]*/gi,
             /^(ok,?\s*)?natural,?\s*direct\s*speech\s*in\s*\w+[:\s,.]*/gi,
             /^(here'?s?\s*)?the\s*natural,?\s*direct\s*speech[:\s,.]*/gi,
             /^translation\s*in\s*\w+[:\s,.]*/gi,
             /^natural,?\s*direct\s*speech\s*in\s*\w+[:\s,.]*/gi,
+            /^(here'?s?\s*)?the\s*english\s*conversion[:\s,.]*/gi,
+            /^english\s*conversion\s*of[:\s,.]*/gi,
+            /^the\s*provided\s*statement[:\s,.]*/gi,
+            /^into\s*natural\s*direct\s*speech[:\s,.]*/gi,
+            /^adhering\s*to\s*all\s*(the\s*)?requirements[:\s,.]*/gi,
+            /^(here'?s?\s*)?the\s*\w+\s*conversion\s*of\s*the\s*provided\s*statement[:\s,.]*/gi,
+            /^response\s*\(\w+,?\s*direct\s*content\s*only\)[:\s,.]*/gi,
+            /^direct\s*content\s*only[:\s,.]*/gi,
 
-            // Hindi prefixes
+            // Hindi prefixes (Enhanced)
             /^(ठीक है,?\s*)?यहाँ\s*(प्रत्यक्ष\s*)?भाषण\s*(रूपांतरण|पाठ|प्रतिक्रिया)\s*(है|हैं?)[:\s,.]*/gi,
             /^(ठीक,?\s*)?यह\s*(प्रत्यक्ष\s*)?भाषण\s*(रूपांतरण|पाठ|प्रतिक्रिया)\s*(है|हैं?)[:\s,.]*/gi,
             /^(अच्छा,?\s*)?यहाँ\s*(आपका\s*)?भाषण\s*(रूपांतरण|पाठ)\s*(है|हैं?)[:\s,.]*/gi,
             /^हिंदी\s*में\s*अनुवाद[:\s,.]*/gi,
             /^हिंदी\s*में\s*(प्राकृतिक|प्रत्यक्ष)\s*भाषण[:\s,.]*/gi,
+            /^प्रदान\s*किए\s*गए\s*कथन\s*का[:\s,.]*/gi,
+            /^अंग्रेजी\s*रूपांतरण[:\s,.]*/gi,
 
-            // Bengali prefixes
+            // Bengali prefixes (Enhanced)
             /^(ঠিক আছে,?\s*)?এখানে\s*(সরাসরি\s*)?বক্তৃতা\s*(রূপান্তর|পাঠ|প্রতিক্রিয়া)[:\s,.]*/gi,
             /^(ভাল,?\s*)?এই\s*(সরাসরি\s*)?বক্তৃতা\s*(রূপান্তর|পাঠ)[:\s,.]*/gi,
             /^বাংলায়\s*অনুবাদ[:\s,.]*/gi,
             /^বাংলায়\s*(প্রাকৃতিক|সরাসরি)\s*বক্তৃতা[:\s,.]*/gi,
+            /^প্রদত্ত\s*বিবৃতির[:\s,.]*/gi,
+            /^ইংরেজি\s*রূপান্তর[:\s,.]*/gi,
 
-            // Telugu prefixes
+            // Telugu prefixes (Enhanced)
             /^(సరే,?\s*)?ఇక్కడ\s*(ప్రత్యక్ష\s*)?ప్రసంగం\s*(మార్పిడి|వచనం|ప్రతిస్పందన)[:\s,.]*/gi,
             /^(మంచిది,?\s*)?ఇది\s*(ప్రత్యక్ష\s*)?ప్రసంగం\s*(మార్పిడి|వచనం)[:\s,.]*/gi,
             /^తెలుగులో\s*అనువాదం[:\s,.]*/gi,
+            /^అందించిన\s*ప్రకటన[:\s,.]*/gi,
+            /^ఆంగ్ల\s*మార్పిడి[:\s,.]*/gi,
 
-            // Marathi prefixes
+            // Marathi prefixes (Enhanced)
             /^(ठीक आहे,?\s*)?येथे\s*(थेट\s*)?भाषण\s*(रूपांतरण|मजकूर|प्रतिसाद)[:\s,.]*/gi,
             /^(चांगले,?\s*)?हे\s*(थेट\s*)?भाषण\s*(रूपांतरण|मजकूर)[:\s,.]*/gi,
             /^मराठीत\s*भाषांतर[:\s,.]*/gi,
+            /^प्रदान\s*केलेले\s*विधान[:\s,.]*/gi,
+            /^इंग्रजी\s*रूपांतरण[:\s,.]*/gi,
 
-            // Tamil prefixes
+            // Tamil prefixes (Enhanced)
             /^(சரி,?\s*)?இங்கே\s*(நேரடி\s*)?பேச்சு\s*(மாற்றம்|உரை|பதில்)[:\s,.]*/gi,
             /^(நல்லது,?\s*)?இது\s*(நேரடி\s*)?பேச்சு\s*(மாற்றம்|உரை)[:\s,.]*/gi,
             /^தமிழில்\s*மொழிபெயர்ப்பு[:\s,.]*/gi,
+            /^வழங்கப்பட்ட\s*அறிக்கை[:\s,.]*/gi,
+            /^ஆங்கில\s*மாற்றம்[:\s,.]*/gi,
 
-            // Gujarati prefixes
+            // Gujarati prefixes (Enhanced)
             /^(બરાબર,?\s*)?અહીં\s*(સીધું\s*)?ભાષણ\s*(રૂપાંતરણ|લખાણ|પ્રતિસાદ)[:\s,.]*/gi,
             /^(સારું,?\s*)?આ\s*(સીધું\s*)?ભાષણ\s*(રૂપાંતરણ|લખાણ)[:\s,.]*/gi,
             /^ગુજરાતીમાં\s*અનુવાદ[:\s,.]*/gi,
+            /^પ્રદાન\s*કરેલ\s*નિવેદન[:\s,.]*/gi,
+            /^અંગ્રેજી\s*રૂપાંતરણ[:\s,.]*/gi,
 
-            // Kannada prefixes
+            // Kannada prefixes (Enhanced)
             /^(ಸರಿ,?\s*)?ಇಲ್ಲಿ\s*(ನೇರ\s*)?ಭಾಷಣ\s*(ಪರಿವರ್ತನೆ|ಪಠ್ಯ|ಪ್ರತಿಕ್ರಿಯೆ)[:\s,.]*/gi,
             /^(ಒಳ್ಳೆಯದು,?\s*)?ಇದು\s*(ನೇರ\s*)?ಭಾಷಣ\s*(ಪರಿವರ್ತನೆ|ಪಠ್ಯ)[:\s,.]*/gi,
             /^ಕನ್ನಡದಲ್ಲಿ\s*ಅನುವಾದ[:\s,.]*/gi,
+            /^ಒದಗಿಸಿದ\s*ಹೇಳಿಕೆ[:\s,.]*/gi,
+            /^ಇಂಗ್ಲಿಷ್\s*ಪರಿವರ್ತನೆ[:\s,.]*/gi,
 
-            // Malayalam prefixes
+            // Malayalam prefixes (Enhanced)
             /^(ശരി,?\s*)?ഇവിടെ\s*(നേരിട്ട്\s*)?പ്രസംഗം\s*(പരിവർത്തനം|വാചകം|പ്രതികരണം)[:\s,.]*/gi,
             /^(നല്ലത്,?\s*)?ഇത്\s*(നേരിട്ട്\s*)?പ്രസംഗം\s*(പരിവർത്തനം|വാചകം)[:\s,.]*/gi,
             /^മലയാളത്തിൽ\s*വിവർത്തനം[:\s,.]*/gi,
+            /^നൽകിയ\s*പ്രസ്താവന[:\s,.]*/gi,
+            /^ഇംഗ്ലീഷ്\s*പരിവർത്തനം[:\s,.]*/gi,
 
-            // Punjabi prefixes
+            // Punjabi prefixes (Enhanced)
             /^(ਠੀਕ ਹੈ,?\s*)?ਇੱਥੇ\s*(ਸਿੱਧਾ\s*)?ਭਾਸ਼ਣ\s*(ਬਦਲਾਅ|ਟੈਕਸਟ|ਜਵਾਬ)[:\s,.]*/gi,
             /^(ਚੰਗਾ,?\s*)?ਇਹ\s*(ਸਿੱਧਾ\s*)?ਭਾਸ਼ਣ\s*(ਬਦਲਾਅ|ਟੈਕਸਟ)[:\s,.]*/gi,
             /^ਪੰਜਾਬੀ\s*ਵਿੱਚ\s*ਅਨੁਵਾਦ[:\s,.]*/gi,
+            /^ਦਿੱਤਾ\s*ਗਿਆ\s*ਬਿਆਨ[:\s,.]*/gi,
+            /^ਅੰਗਰੇਜ਼ੀ\s*ਬਦਲਾਅ[:\s,.]*/gi,
 
-            // Odia prefixes
+            // Odia prefixes (Enhanced)
             /^(ଠିକ୍ ଅଛି,?\s*)?ଏଠାରେ\s*(ସିଧା\s*)?ଭାଷଣ\s*(ପରିବର୍ତ୍ତନ|ପାଠ୍ୟ|ପ୍ରତିକ୍ରିୟା)[:\s,.]*/gi,
             /^(ଭଲ,?\s*)?ଏହା\s*(ସିଧା\s*)?ଭାଷଣ\s*(ପରିବର୍ତ୍ତନ|ପାଠ୍ୟ)[:\s,.]*/gi,
             /^ଓଡ଼ିଆରେ\s*ଅନୁବାଦ[:\s,.]*/gi,
+            /^ପ୍ରଦାନ\s*କରାଯାଇଥିବା\s*ବିବୃତି[:\s,.]*/gi,
+            /^ଇଂରାଜୀ\s*ପରିବର୍ତ୍ତନ[:\s,.]*/gi,
 
-            // Assamese prefixes
+            // Assamese prefixes (Enhanced)
             /^(ঠিক আছে,?\s*)?ইয়াত\s*(পোনপটীয়া\s*)?ভাষণ\s*(ৰূপান্তৰ|পাঠ|প্ৰতিক্ৰিয়া)[:\s,.]*/gi,
             /^(ভাল,?\s*)?এয়া\s*(পোনপটীয়া\s*)?ভাষণ\s*(ৰূপান্তৰ|পাঠ)[:\s,.]*/gi,
             /^অসমীয়াত\s*অনুবাদ[:\s,.]*/gi,
+            /^প্ৰদান\s*কৰা\s*বিবৃতি[:\s,.]*/gi,
+            /^ইংৰাজী\s*ৰূপান্তৰ[:\s,.]*/gi,
 
-            // Urdu prefixes
+            // Urdu prefixes (Enhanced)
             /^(ٹھیک ہے,?\s*)?یہاں\s*(براہ راست\s*)?تقریر\s*(تبدیلی|متن|جواب)[:\s,.]*/gi,
             /^(اچھا,?\s*)?یہ\s*(براہ راست\s*)?تقریر\s*(تبدیلی|متن)[:\s,.]*/gi,
-            /^اردو\s*میں\s*ترجمہ[:\s,.]*/gi
+            /^اردو\s*میں\s*ترجمہ[:\s,.]*/gi,
+            /^فراہم\s*کردہ\s*بیان[:\s,.]*/gi,
+            /^انگریزی\s*تبدیلی[:\s,.]*/gi,
+
+            // Generic conversational fillers (All languages)
+            /^(sure|okay|alright|right)[,.\s]*/gi,
+            /^(ज़रूर|ठीक|अच्छा|सही)[,.\s]*/gi,
+            /^(নিশ্চয়|ঠিক|ভাল|সঠিক)[,.\s]*/gi,
+            /^(ఖచ్చితంగా|సరే|మంచిది|సరైన)[,.\s]*/gi,
+            /^(नक्कीच|ठीक|चांगले|बरोबर)[,.\s]*/gi,
+            /^(நிச்சயமாக|சரி|நல்லது|சரியான)[,.\s]*/gi,
+            /^(ચોક્કસ|ઠીક|સારું|યોગ્ય)[,.\s]*/gi,
+            /^(ಖಂಡಿತ|ಸರಿ|ಒಳ್ಳೆಯದು|ಸರಿಯಾದ)[,.\s]*/gi,
+            /^(തീർച്ചയായും|ശരി|നല്ലത്|ശരിയായ)[,.\s]*/gi,
+            /^(ਯਕੀਨੀ|ਠੀਕ|ਚੰਗਾ|ਸਹੀ)[,.\s]*/gi,
+            /^(ନିଶ୍ଚିତ|ଠିକ୍|ଭଲ|ସଠିକ୍)[,.\s]*/gi,
+            /^(নিশ্চিত|ঠিক|ভাল|সঠিক)[,.\s]*/gi,
+            /^(یقینی|ٹھیک|اچھا|صحیح)[,.\s]*/gi
         ];
 
         // Apply all unwanted prefix removals
@@ -840,14 +1491,58 @@ Natural, direct speech in ${targetLanguage} (include ALL details, especially har
             .replace(/^(নিশ্চয়|ঠিক|ভাল|সঠিক)[,.\s]*/gi, '')
             .replace(/^(ఖచ్చితంగా|సరే|మంచిది|సరైన)[,.\s]*/gi, '')
             .replace(/^(नक्कीच|ठीक|चांगले|बरोबर)[,.\s]*/gi, '')
-            .replace(/^(நிச்சயமாக|சரி|நல்லது|சரியான)[,.\s]*/gi, '')
+            .replace(/^(நிச்சயமாக|சரி|நல்لது|சரியான)[,.\s]*/gi, '')
             .replace(/^(ચોક્કસ|ઠીક|સારું|યોગ્ય)[,.\s]*/gi, '')
             .replace(/^(ಖಂಡಿತ|ಸರಿ|ಒಳ್ಳೆಯದು|ಸರಿಯಾದ)[,.\s]*/gi, '')
             .replace(/^(തീർച്ചയായും|ശരി|നല്ലത്|ശരിയായ)[,.\s]*/gi, '')
             .replace(/^(ਯਕੀਨੀ|ਠੀਕ|ਚੰਗਾ|ਸਹੀ)[,.\s]*/gi, '')
             .replace(/^(ନିଶ୍ଚିତ|ଠିକ୍|ଭଲ|ସଠିକ୍)[,.\s]*/gi, '')
-            .replace(/^(নিশ্চিত|ঠিক|ভাল|সঠিক)[,.\s]*/gi, '')
+            .replace(/^(নিশ্চিত|ঠিক|ভাল|ସଠିକ୍)[,.\s]*/gi, '')
             .replace(/^(یقینی|ٹھیک|اچھا|صحیح)[,.\s]*/gi, '')
+
+            // Remove meta-commentary about conversation/translation
+            .replace(/^(direct\s*speech\s*in\s*\w+)[:\s,.]*/gi, '')
+            .replace(/^(प्रत्यक्ष\s*भाषण)[:\s,.]*/gi, '')
+            .replace(/^(সরাসরি\s*বক্তৃতা)[:\s,.]*/gi, '')
+            .replace(/^(ప్రత్యక్ష\s*ప్రసంగం)[:\s,.]*/gi, '')
+            .replace(/^(थेट\s*भाषण)[:\s,.]*/gi, '')
+            .replace(/^(நேரடி\s*பேச்சு)[:\s,.]*/gi, '')
+            .replace(/^(સીધું\s*ભાષણ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(ನೇರ\s*ಭಾಷಣ)[:\s,.]*/gi, '')
+            .replace(/^(നേരിട്ടുള്ള\s*പ്രസംഗം)[:\s,.]*/gi, '')
+            .replace(/^(ਸਿੱਧਾ\s*ਭਾਸ਼ਣ)[:\s,.]*/gi, '')
+            .replace(/^(ସିଧା\s*ଭାଷଣ)[:\s,.]*/gi, '')
+            .replace(/^(পোনপটীয়া\s*ভাষণ)[:\s,.]*/gi, '')
+            .replace(/^(براہ\s*راست\s*تقریر)[:\s,.]*/gi, '')
+
+            // Remove any remaining colons or markers at the start
+            .replace(/^[:\-\s]*/, '')
             .trim();
 
         res.json({
