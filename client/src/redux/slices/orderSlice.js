@@ -36,8 +36,14 @@ export const getConsumerOrders = createAsyncThunk(
 )
 
 // Get farmer orders
-export const getFarmerOrders = createAsyncThunk("orders/getFarmerOrders", async (_, { rejectWithValue }) => {
+export const getFarmerOrders = createAsyncThunk("orders/getFarmerOrders", async (_, { rejectWithValue, getState }) => {
   try {
+    // Check if user is authenticated and is a farmer
+    const { auth } = getState();
+    if (!auth.isAuthenticated || !auth.token || auth.user?.role !== "farmer") {
+      return rejectWithValue("User not authenticated or not a farmer");
+    }
+
     const { data } = await axiosInstance.get(`/api/orders/farmer`)
     return { data: data.data || [] } // Ensure we always return an array
   } catch (error) {
@@ -184,7 +190,10 @@ const orderSlice = createSlice({
       })
       .addCase(getFarmerOrders.rejected, (state, action) => {
         state.loading = false
-        state.error = action.payload
+        // Don't set error for authentication issues
+        if (action.payload !== "User not authenticated or not a farmer") {
+          state.error = action.payload
+        }
       })
       // Get order details
       .addCase(getOrderDetails.pending, (state) => {

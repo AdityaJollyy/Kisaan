@@ -9,6 +9,7 @@ import { getProducts } from "../redux/slices/productSlice";
 import { sendMessage } from "../redux/slices/messageSlice";
 import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
+import VerificationBadge from "../components/VerificationBadge";
 import {
   FaLeaf,
   FaMapMarkerAlt,
@@ -104,10 +105,20 @@ const FarmerDetailPage = () => {
           <div className="md:w-1/3 bg-gradient-to-br from-green-500 to-green-700 p-8 text-white">
             <div className="flex flex-col h-full">
               <div className="flex-grow">
-                <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center mb-6">
+                <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center mb-6 relative">
                   <FaLeaf className="text-4xl" />
                 </div>
                 <h1 className="text-3xl font-bold mb-2">{name}</h1>
+
+                {/* Verification Status */}
+                <div className="mb-4">
+                  <VerificationBadge
+                    isVerified={profile?.isVerified || false}
+                    size="md"
+                    style="full"
+                    showText={true}
+                  />
+                </div>
 
                 {address && (
                   <div className="flex items-start mb-4">

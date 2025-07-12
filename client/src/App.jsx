@@ -32,6 +32,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 
 // Farmer Pages
 import FarmerDashboardPage from "./pages/farmer/DashboardPage";
+import FarmerVerificationPage from "./pages/farmer/VerificationPage";
 import FarmerProductsPage from "./pages/farmer/ProductsPage";
 import FarmerAddProductPage from "./pages/farmer/AddProductPage";
 import FarmerEditProductPage from "./pages/farmer/EditProductPage";
@@ -49,7 +50,11 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(loadUser());
+    // Only try to load user if there's a token in localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      dispatch(loadUser());
+    }
   }, [dispatch]);
 
   return (
@@ -85,6 +90,7 @@ function App() {
           <Route element={<FarmerRoute />}>
             <Route path="business-hours-setup" element={<BusinessHoursSetup />} />
             <Route path="farmer/dashboard" element={<FarmerDashboardPage />} />
+            <Route path="farmer/verification" element={<FarmerVerificationPage />} />
             <Route path="farmer/products" element={<FarmerProductsPage />} />
             <Route
               path="farmer/products/add"

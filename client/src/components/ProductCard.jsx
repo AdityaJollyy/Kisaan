@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { placeholder } from "../assets";
 import { filterValidImageUrls } from "../utils/imageCleanup";
+import VerificationBadge from "./VerificationBadge";
 
 const ProductCard = ({ product }) => {
   const handleImageError = (e) => {
@@ -36,8 +37,8 @@ const ProductCard = ({ product }) => {
           </span>
         )}
         <span className={`absolute top-2 left-2 px-2 py-1 text-xs font-semibold rounded-full ${product.quantityAvailable > 0
-            ? "bg-green-100 text-green-800"
-            : "bg-red-100 text-red-800"
+          ? "bg-green-100 text-green-800"
+          : "bg-red-100 text-red-800"
           }`}>
           {product.quantityAvailable > 0 ? "In Stock" : "Out of Stock"}
         </span>
@@ -47,6 +48,19 @@ const ProductCard = ({ product }) => {
         <p className="text-gray-500 text-sm mb-2">
           {product.category?.name || "General"}
         </p>
+
+        {/* Farmer Information with Verification */}
+        {product.farmer && (
+          <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
+            <span>by {product.farmer.name}</span>
+            <VerificationBadge
+              isVerified={product.farmer.farmerProfile?.isVerified || false}
+              size="xs"
+              style="icon"
+            />
+          </div>
+        )}
+
         <div className="flex justify-between items-center">
           <span className="text-green-600 font-bold">
             ₨{product.price.toFixed(2)} / {product.unit}

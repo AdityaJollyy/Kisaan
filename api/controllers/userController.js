@@ -6,7 +6,32 @@ const FarmerProfile = require("../models/FarmerProfileModel");
 // @access  Public
 exports.getAllFarmers = async (req, res) => {
   try {
-    const farmers = await User.find({ role: "farmer" }).select("-password");
+    const { verified, search, sortBy = 'name', order = 'asc' } = req.query;
+
+    // Build filter for farmers
+    let userFilter = { role: "farmer" };
+
+    // Add search filter if provided
+    if (search) {
+      userFilter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { 'address.city': { $regex: search, $options: 'i' } },
+        { 'address.state': { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Build sort object
+    let sortObject = {};
+    if (sortBy === 'name') {
+      sortObject.name = order === 'desc' ? -1 : 1;
+    } else if (sortBy === 'createdAt') {
+      sortObject.createdAt = order === 'desc' ? -1 : 1;
+    }
+
+    const farmers = await User.find(userFilter)
+      .select("-password")
+      .sort(sortObject);
 
     // Get farmer profiles for each farmer
     const farmersWithProfiles = await Promise.all(
@@ -19,10 +44,30 @@ exports.getAllFarmers = async (req, res) => {
       })
     );
 
+    // Apply verification filter after getting profiles
+    let filteredFarmers = farmersWithProfiles;
+    if (verified !== undefined) {
+      const isVerifiedFilter = verified === 'true';
+      filteredFarmers = farmersWithProfiles.filter(farmer =>
+        farmer.farmerProfile ? farmer.farmerProfile.isVerified === isVerifiedFilter : !isVerifiedFilter
+      );
+    }
+
+    // Sort by verification status if requested
+    if (sortBy === 'verified') {
+      filteredFarmers.sort((a, b) => {
+        const aVerified = a.farmerProfile?.isVerified || false;
+        const bVerified = b.farmerProfile?.isVerified || false;
+        return order === 'desc' ? bVerified - aVerified : aVerified - bVerified;
+      });
+    }
+
     res.json({
       success: true,
-      count: farmersWithProfiles.length,
-      data: farmersWithProfiles,
+      count: filteredFarmers.length,
+      totalFarmers: farmersWithProfiles.length,
+      filters: { verified, search, sortBy, order },
+      data: filteredFarmers,
     });
   } catch (error) {
     console.error("Error fetching farmers:", error);

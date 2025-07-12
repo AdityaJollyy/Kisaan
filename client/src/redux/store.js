@@ -10,6 +10,7 @@ import userReducer from "./slices/userSlice"
 import aiReducer from "./slices/aiSlice"
 import notificationReducer from "./slices/notificationSlice"
 import languageReducer from "./slices/languageSlice"
+import verificationReducer from "./slices/verificationSlice"
 
 export const store = configureStore({
   reducer: {
@@ -24,5 +25,6 @@ export const store = configureStore({
     ai: aiReducer,
     notifications: notificationReducer,
     language: languageReducer,
+    verification: verificationReducer,
   },
 })

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect, authorize } = require("../utils/authMiddleware");
+const { verifyToken, isConsumer, isAdmin } = require("../utils/authMiddleware");
 const {
   createReview,
   getFarmerReviews,
@@ -10,18 +10,18 @@ const {
 } = require("../controllers/reviewController");
 
 // Create a review - consumer only
-router.post("/", protect, authorize("consumer"), createReview);
+router.post("/", verifyToken, isConsumer, createReview);
 
 // Get reviews for a farmer - public
 router.get("/farmer/:farmerId", getFarmerReviews);
 
 // Get review for a specific order - private
-router.get("/order/:orderId", protect, getOrderReview);
+router.get("/order/:orderId", verifyToken, getOrderReview);
 
 // Update a review - consumer only
-router.put("/:id", protect, authorize("consumer"), updateReview);
+router.put("/:id", verifyToken, isConsumer, updateReview);
 
 // Delete a review - consumer or admin
-router.delete("/:id", protect, deleteReview);
+router.delete("/:id", verifyToken, deleteReview);
 
 module.exports = router; 

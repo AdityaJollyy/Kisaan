@@ -12,6 +12,8 @@ const aiRoutes = require("./routes/aiRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const locationRoutes = require("./routes/locationRoutes");
+const verificationRoutes = require("./routes/verificationRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 const connectDB = require("./db/connection");
 const translateRouter = require("./routes/translate");
 
@@ -50,6 +52,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/location", locationRoutes);
+app.use("/api/verification", verificationRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/translate", express.json(), translateRouter);
 
 // Start server

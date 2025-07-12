@@ -63,6 +63,26 @@ const FarmerProfileSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    verificationDetails: {
+      method: {
+        type: String,
+        enum: ['government_data', 'manual_review', 'admin_verified'],
+        default: null
+      },
+      verifiedAt: {
+        type: Date,
+        default: null
+      },
+      verifiedBy: {
+        type: String, // Could be 'system' or admin ID
+        default: null
+      },
+      governmentData: {
+        name: String,
+        mobile: String,
+        pmKisanId: String
+      }
+    },
   },
   {
     timestamps: true,

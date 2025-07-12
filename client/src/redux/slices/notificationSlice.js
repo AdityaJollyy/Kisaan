@@ -4,8 +4,14 @@ import axiosInstance from "../../utils/axiosConfig";
 // Get user notifications
 export const getUserNotifications = createAsyncThunk(
   "notifications/getUserNotifications",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
+      // Check if user is authenticated
+      const { auth } = getState();
+      if (!auth.isAuthenticated || !auth.token) {
+        return rejectWithValue("User not authenticated");
+      }
+
       const { data } = await axiosInstance.get(`/api/notifications`);
       return data;
     } catch (error) {
@@ -72,7 +78,10 @@ const notificationSlice = createSlice({
       })
       .addCase(getUserNotifications.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        // Don't set error for authentication issues
+        if (action.payload !== "User not authenticated") {
+          state.error = action.payload;
+        }
       })
       // Mark notification as read
       .addCase(markAsRead.pending, (state) => {

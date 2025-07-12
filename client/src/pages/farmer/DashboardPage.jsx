@@ -5,7 +5,9 @@ import { getFarmerProducts } from "../../redux/slices/productSlice";
 import { getFarmerOrders } from "../../redux/slices/orderSlice";
 import { getConversations } from "../../redux/slices/messageSlice";
 import { getMyFarmerProfile } from "../../redux/slices/farmerSlice";
+import { getVerificationStatus } from "../../redux/slices/verificationSlice";
 import Loader from "../../components/Loader";
+import VerificationBadge from "../../components/VerificationBadge";
 import {
   FaBox,
   FaShoppingCart,
@@ -17,6 +19,9 @@ import {
   FaClipboardList,
   FaShippingFast,
   FaExclamationTriangle,
+  FaShieldAlt,
+  FaCheckCircle,
+  FaTimes,
 } from "react-icons/fa";
 import { updateOrderStatus } from "../../redux/slices/orderSlice";
 
@@ -32,12 +37,14 @@ const DashboardPage = () => {
   );
   const { user } = useSelector((state) => state.auth);
   const { loading: profileLoading } = useSelector((state) => state.farmers);
+  const { isVerified, loading: verificationLoading } = useSelector((state) => state.verification);
 
   useEffect(() => {
     dispatch(getFarmerProducts());
     dispatch(getFarmerOrders());
     dispatch(getConversations());
     dispatch(getMyFarmerProfile());
+    dispatch(getVerificationStatus());
   }, [dispatch]);
 
   const orderCounts = {
@@ -90,9 +97,17 @@ const DashboardPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Farmer Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.name}!</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Farmer Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {user?.name}!</p>
+          </div>
+          <VerificationBadge
+            isVerified={isVerified}
+            size="md"
+            style="badge"
+            showText={true}
+          />
         </div>
         <Link
           to="/farmer/products/add"
@@ -102,6 +117,48 @@ const DashboardPage = () => {
           <span>Add New Product</span>
         </Link>
       </div>
+
+      {/* Verification Alert Banner */}
+      {!isVerified && !verificationLoading && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-6 mb-8">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <FaShieldAlt className="text-yellow-600 text-xl" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-lg font-semibold text-yellow-800">
+                  Get Verified to Build Trust
+                </h3>
+                <span className="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs font-medium rounded-full">
+                  Recommended
+                </span>
+              </div>
+              <p className="text-yellow-700 mb-4">
+                Verified farmers get more orders and build stronger trust with consumers. It only takes 2 minutes!
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to="/farmer/verification"
+                  className="inline-flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors font-medium"
+                >
+                  <FaShieldAlt />
+                  Get Verified Now
+                </Link>
+                <Link
+                  to="/profile"
+                  className="inline-flex items-center gap-2 text-yellow-700 border border-yellow-300 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-colors"
+                >
+                  <FaCheckCircle />
+                  View Verification Status
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">

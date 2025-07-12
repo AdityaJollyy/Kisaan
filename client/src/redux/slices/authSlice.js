@@ -96,6 +96,10 @@ export const loadUser = createAsyncThunk(
 
       return data;
     } catch (error) {
+      // Clear invalid token from localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
       const message =
         error.response && error.response.data.message
           ? error.response.data.message
@@ -212,6 +216,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.token = null;
         state.user = null;
+        // Clear localStorage when loadUser fails
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
       })
       // Update Profile
       .addCase(updateProfile.pending, (state) => {

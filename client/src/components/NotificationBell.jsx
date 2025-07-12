@@ -6,12 +6,21 @@ import { getUserNotifications, markAsRead, markAllAsRead } from "../redux/slices
 const NotificationBell = () => {
   const dispatch = useDispatch();
   const { notifications, unreadCount, loading } = useSelector((state) => state.notifications);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    dispatch(getUserNotifications());
-  }, [dispatch]);
+    // Only fetch notifications if user is authenticated
+    if (isAuthenticated && user) {
+      dispatch(getUserNotifications());
+    }
+  }, [dispatch, isAuthenticated, user]);
+
+  // Don't render the component if user is not authenticated
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   useEffect(() => {
     // Close dropdown when clicking outside

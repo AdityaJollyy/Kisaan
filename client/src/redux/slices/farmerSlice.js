@@ -5,10 +5,11 @@ import axiosInstance from "../../utils/axiosConfig";
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 // Get all farmers
-export const getAllFarmers = createAsyncThunk("farmers/getAllFarmers", async (_, { rejectWithValue }) => {
+export const getAllFarmers = createAsyncThunk("farmers/getAllFarmers", async (queryString = "", { rejectWithValue }) => {
   try {
-    const { data } = await axiosInstance.get(`/api/users/farmers`)
-    return data
+    const url = queryString ? `/api/users/farmers?${queryString}` : `/api/users/farmers`;
+    const { data } = await axiosInstance.get(url);
+    return data;
   } catch (error) {
     const message = error.response && error.response.data.message ? error.response.data.message : error.message
     return rejectWithValue(message)

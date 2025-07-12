@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllUsers } from "../../redux/slices/userSlice";
@@ -7,11 +7,15 @@ import { getCategories } from "../../redux/slices/categorySlice";
 import { getProducts } from "../../redux/slices/productSlice";
 import Loader from "../../components/Loader";
 import { FaUsers, FaList, FaBox, FaUserCheck } from "react-icons/fa6";
-import { FaShoppingCart, FaMoneyBillWave } from "react-icons/fa";
+import { FaShoppingCart, FaMoneyBillWave, FaTimes, FaShieldAlt, FaCheckCircle } from "react-icons/fa";
 import { GiFarmer } from "react-icons/gi";
+import axiosInstance from "../../utils/axiosConfig";
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
+  const [verificationStats, setVerificationStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
   const { users, loading: usersLoading } = useSelector((state) => state.users);
   const { adminOrders, loading: ordersLoading } = useSelector(
     (state) => state.orders
@@ -28,7 +32,20 @@ const DashboardPage = () => {
     dispatch(getAllOrders());
     dispatch(getCategories());
     dispatch(getProducts());
+    fetchVerificationStats();
   }, [dispatch]);
+
+  const fetchVerificationStats = async () => {
+    try {
+      setLoadingStats(true);
+      const { data } = await axiosInstance.get('/api/verification/stats');
+      setVerificationStats(data.data);
+    } catch (error) {
+      console.error('Error fetching verification stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   // Count users by role
   const userCounts = {
@@ -120,6 +137,62 @@ const DashboardPage = () => {
             From completed orders
           </span>
         </div>
+      </div>
+
+      {/* Verification Statistics */}
+      <div className="glass p-6 rounded-xl mb-8">
+        <h2 className="text-xl font-semibold mb-6">Farmer Verification Statistics</h2>
+        {loadingStats ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+          </div>
+        ) : verificationStats ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Farmers</p>
+                  <p className="text-2xl font-bold text-gray-900">{verificationStats.farmers.total}</p>
+                </div>
+                <FaUsers className="text-blue-500 text-xl" />
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Verified Farmers</p>
+                  <p className="text-2xl font-bold text-green-600">{verificationStats.farmers.verified}</p>
+                </div>
+                <FaCheckCircle className="text-green-500 text-xl" />
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Unverified</p>
+                  <p className="text-2xl font-bold text-gray-600">{verificationStats.farmers.unverified}</p>
+                </div>
+                <FaTimes className="text-gray-500 text-xl" />
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Verification Rate</p>
+                  <p className="text-2xl font-bold text-purple-600">{verificationStats.farmers.verificationRate}%</p>
+                </div>
+                <FaShieldAlt className="text-purple-500 text-xl" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Failed to load verification statistics
+          </div>
+        )}
       </div>
 
       <div className="glass p-6 rounded-xl mb-8">
@@ -237,14 +310,13 @@ const DashboardPage = () => {
                       <td className="py-3">{order.consumer.name}</td>
                       <td className="text-center py-3">
                         <span
-                          className={`badge ${
-                            order.status === "pending"
-                              ? "badge-blue"
-                              : order.status === "accepted" ||
-                                order.status === "completed"
+                          className={`badge ${order.status === "pending"
+                            ? "badge-blue"
+                            : order.status === "accepted" ||
+                              order.status === "completed"
                               ? "badge-green"
                               : "badge-red"
-                          }`}
+                            }`}
                         >
                           {order.status.charAt(0).toUpperCase() +
                             order.status.slice(1)}
@@ -317,13 +389,12 @@ const DashboardPage = () => {
                       </td>
                       <td className="text-right py-3">
                         <span
-                          className={`${
-                            product.quantityAvailable === 0
-                              ? "text-red-500"
-                              : product.quantityAvailable < 5
+                          className={`${product.quantityAvailable === 0
+                            ? "text-red-500"
+                            : product.quantityAvailable < 5
                               ? "text-orange-500"
                               : "text-green-500"
-                          } font-medium`}
+                            } font-medium`}
                         >
                           {product.quantityAvailable} {product.unit}
                         </span>

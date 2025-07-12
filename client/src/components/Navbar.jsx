@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { logout } from "../redux/slices/authSlice";
 import { resetOrderState, getFarmerOrders } from "../redux/slices/orderSlice";
+import { getVerificationStatus } from "../redux/slices/verificationSlice";
 import { toast } from "react-toastify";
 import {
   FaLeaf,
@@ -16,6 +17,7 @@ import {
 } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
 import LanguageSelector from "./LanguageSelector";
+import VerificationBadge from "./VerificationBadge";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,14 +30,16 @@ const Navbar = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.cart);
   const { farmerOrders } = useSelector((state) => state.orders);
+  const { isVerified } = useSelector((state) => state.verification);
 
   // Auto-refresh farmer orders every 30 seconds
   useEffect(() => {
     if (isAuthenticated && user?.role === "farmer") {
       // Fetch orders on mount only
       dispatch(getFarmerOrders());
+      dispatch(getVerificationStatus());
     }
-  }, [dispatch, isAuthenticated, user]);
+  }, [dispatch, isAuthenticated, user?.role]);
 
   // Calculate pending orders for farmers
   const pendingOrdersCount = user?.role === "farmer"
@@ -157,6 +161,13 @@ const Navbar = () => {
                   <span className="font-medium">
                     {user?.name?.split(" ")[0]}
                   </span>
+                  {user?.role === "farmer" && (
+                    <VerificationBadge
+                      isVerified={isVerified}
+                      size="sm"
+                      style="icon"
+                    />
+                  )}
                 </button>
 
                 {isProfileOpen && (

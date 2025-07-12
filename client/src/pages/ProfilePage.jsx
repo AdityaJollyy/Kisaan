@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateProfile } from "../redux/slices/authSlice";
 import { updateFarmerProfile, getMyFarmerProfile, getAllFarmers, clearSuccessState } from "../redux/slices/farmerSlice";
+import { getVerificationStatus } from "../redux/slices/verificationSlice";
 import Loader from "../components/Loader";
 import LocationDetector from "../components/LocationDetector";
+import VerificationBadge from "../components/VerificationBadge";
+import FarmerVerificationModal from "../components/FarmerVerificationModal";
 import {
   FaUser,
   FaEnvelope,
@@ -14,6 +17,7 @@ import {
   FaUpload,
   FaTimes,
   FaCheckCircle,
+  FaShieldAlt,
 } from "react-icons/fa";
 import UploadProgress from "../components/UploadProgress";
 import { toast } from "react-toastify";
@@ -26,6 +30,8 @@ const ProfilePage = () => {
     loading: farmerLoading,
     success: farmerSuccess,
   } = useSelector((state) => state.farmers);
+  const { isVerified, loading: verificationLoading } = useSelector((state) => state.verification);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const [userForm, setUserForm] = useState({
     name: "",
@@ -97,6 +103,7 @@ const ProfilePage = () => {
   useEffect(() => {
     if (user?.role === "farmer") {
       dispatch(getMyFarmerProfile());
+      dispatch(getVerificationStatus());
     }
   }, [dispatch, user?.role]);
 
@@ -602,21 +609,42 @@ const ProfilePage = () => {
           {"General Information"}
         </button>
         {user?.role === "farmer" && (
-          <button
-            className={`py-2 px-4 font-medium ${activeTab === "farm"
-              ? "text-green-500 border-b-2 border-green-500"
-              : "text-gray-500"
-              }`}
-            onClick={() => setActiveTab("farm")}
-          >
-            {"Farm Profile"}
-          </button>
+          <>
+            <button
+              className={`py-2 px-4 font-medium ${activeTab === "farm"
+                ? "text-green-500 border-b-2 border-green-500"
+                : "text-gray-500"
+                }`}
+              onClick={() => setActiveTab("farm")}
+            >
+              {"Farm Profile"}
+            </button>
+            <button
+              className={`py-2 px-4 font-medium ${activeTab === "verification"
+                ? "text-green-500 border-b-2 border-green-500"
+                : "text-gray-500"
+                }`}
+              onClick={() => setActiveTab("verification")}
+            >
+              {"Verification"}
+            </button>
+          </>
         )}
       </div>
 
       {activeTab === "general" && (
         <div className="glass p-6 rounded-xl">
-          <h2 className="text-xl font-semibold mb-6">General Information</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold">General Information</h2>
+            {user?.role === "farmer" && (
+              <VerificationBadge
+                isVerified={isVerified}
+                size="md"
+                style="badge"
+                showText={true}
+              />
+            )}
+          </div>
 
           <form onSubmit={handleUserSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -838,386 +866,540 @@ const ProfilePage = () => {
       )}
 
       {activeTab === "farm" && user?.role === "farmer" && (
-        <div className="glass p-6 rounded-xl">
-          <h2 className="text-xl font-semibold mb-6">Farm Profile</h2>
-
-          <form onSubmit={handleFarmerSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label
-                  htmlFor="farmName"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Farm Name
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaLeaf className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    id="farmName"
-                    name="farmName"
-                    value={farmerForm.farmName}
-                    onChange={handleFarmerChange}
-                    className="form-input pl-10 block w-full"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="establishedYear"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Established Year
-                </label>
-                <input
-                  type="number"
-                  id="establishedYear"
-                  name="establishedYear"
-                  value={farmerForm.establishedYear}
-                  onChange={handleFarmerChange}
-                  className="form-input block w-full"
-                  min="1900"
-                  max={new Date().getFullYear()}
-                />
-              </div>
-            </div>            <div className="mb-6">
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Farm Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows="4"
-                value={farmerForm.description}
-                onChange={handleFarmerChange}
-                className="form-input block w-full pl-3"
-                placeholder="Tell customers about your farm..."
-                required
-              ></textarea>
-            </div>
-
-            {/* Farm Images Upload Section */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Farm Images
-              </label>              <div className="flex flex-col space-y-3">
-                {/* Upload Area with Drag & Drop */}
-                <div
-                  className={`relative border-2 border-dashed rounded-lg p-6 transition-all duration-200 ${isDragOver
-                    ? 'border-green-500 bg-green-50'
-                    : farmImageUploadState.isUploading
-                      ? 'border-gray-200 bg-gray-50'
-                      : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
-                    }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <div className="text-center">
-                    <div className="flex justify-center mb-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isDragOver ? 'bg-green-200' : 'bg-green-100'
-                        }`}>
-                        <FaUpload className={`text-xl transition-colors ${isDragOver ? 'text-green-600' : 'text-green-500'
-                          }`} />
-                      </div>
-                    </div>
-                    <label className="cursor-pointer">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 mb-1">
-                          {isDragOver
-                            ? 'Drop your farm images here'
-                            : 'Drag & drop farm images or click to browse'
-                          }
-                        </p>
-                        <p className="text-xs text-gray-500 mb-3">
-                          PNG, JPG, WebP up to 5MB each (Max 10 images)
-                        </p>
-                        <span className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${farmImageUploadState.isUploading
-                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                          : isDragOver
-                            ? 'bg-green-700 text-white'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                          }`}>
-                          {farmImageUploadState.isUploading ? 'Uploading...' : 'Choose Images'}
-                        </span>
-                      </div>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleFarmImageChange}
-                        className="hidden"
-                        disabled={farmImageUploadState.isUploading}
-                      />
-                    </label>
+        <div className="space-y-6">
+          {/* Verification Prompt */}
+          {!isVerified && !verificationLoading && (
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <FaShieldAlt className="text-blue-600 text-xl" />
                   </div>
                 </div>
-              </div>              {/* Upload Progress Component */}
-              <UploadProgress
-                isUploading={farmImageUploadState.isUploading}
-                progress={farmImageUploadState.progress}
-                uploadComplete={farmImageUploadState.uploadComplete}
-                uploadError={farmImageUploadState.uploadError}
-                fileCount={farmImageUploadState.fileCount}
-                className="mt-4"
-              />{/* Image Preview Grid */}
-              {farmImagePreviewUrls.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Farm Images ({farmImagePreviewUrls.length})
-                  </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {farmImagePreviewUrls.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
-                          <img
-                            src={url || "/placeholder.svg"}
-                            alt={`Farm image ${index + 1}`}
-                            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = "/placeholder.svg";
-                            }}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFarmImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg transform hover:scale-110"
-                          disabled={farmImageUploadState.isUploading}
-                          title="Remove image"
-                        >
-                          <FaTimes className="w-3 h-3" />
-                        </button>
-                        {/* Image index indicator */}
-                        <div className="absolute bottom-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
-                          {index + 1}
-                        </div>
-                      </div>
-                    ))}
-                  </div>                  <p className="text-xs text-gray-500 mt-2">
-                    Drag and drop images or click to browse. Images will be optimized automatically for best performance.
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                    Complete Your Verification
+                  </h3>
+                  <p className="text-blue-700 mb-4">
+                    Get verified to build trust with consumers and unlock premium features.
                   </p>
-                </div>
-              )}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Farming Practices
-              </label>
-              <div className="flex space-x-2 mb-2">
-                <input
-                  type="text"
-                  value={farmingPractice}
-                  onChange={(e) => setFarmingPractice(e.target.value)}
-                  className="form-input flex-grow pl-3"
-                  placeholder="e.g., Organic, No-till, Permaculture"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddFarmingPractice}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                >
-                  Add
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {farmerForm.farmingPractices.map((practice, index) => (
-                  <div
-                    key={index}
-                    className="bg-green-100 text-green-800 px-3 py-1 rounded-full flex items-center"
-                  >
-                    <span>{practice}</span>
+                  <div className="flex flex-wrap gap-3">
                     <button
-                      type="button"
-                      onClick={() => handleRemoveFarmingPractice(index)}
-                      className="ml-2 text-green-800 hover:text-green-900"
+                      onClick={() => setShowVerificationModal(true)}
+                      className="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium"
                     >
-                      &times;
+                      <FaShieldAlt />
+                      Get Verified Now
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("verification")}
+                      className="inline-flex items-center gap-2 text-blue-700 border border-blue-300 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      <FaCheckCircle />
+                      Learn More
                     </button>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-3">Social Media</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label
-                    htmlFor="facebook"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Facebook
-                  </label>
-                  <input
-                    type="url"
-                    id="facebook"
-                    name="socialMedia.facebook"
-                    value={farmerForm.socialMedia.facebook}
-                    onChange={handleFarmerChange}
-                    className="form-input block w-full pl-3"
-                    placeholder="https://facebook.com/yourfarm"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="instagram"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Instagram
-                  </label>
-                  <input
-                    type="url"
-                    id="instagram"
-                    name="socialMedia.instagram"
-                    value={farmerForm.socialMedia.instagram}
-                    onChange={handleFarmerChange}
-                    className="form-input block w-full pl-3"
-                    placeholder="https://instagram.com/yourfarm"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="twitter"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Twitter
-                  </label>
-                  <input
-                    type="url"
-                    id="twitter"
-                    name="socialMedia.twitter"
-                    value={farmerForm.socialMedia.twitter}
-                    onChange={handleFarmerChange}
-                    className="form-input block w-full pl-3"
-                    placeholder="https://twitter.com/yourfarm"
-                  />
                 </div>
               </div>
             </div>
+          )}
 
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Business Hours</h3>
-                {hasSetMondayHours && (
+          <div className="glass p-6 rounded-xl">
+            <h2 className="text-xl font-semibold mb-6">Farm Profile</h2>
+
+            <form onSubmit={handleFarmerSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label
+                    htmlFor="farmName"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Farm Name
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaLeaf className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      id="farmName"
+                      name="farmName"
+                      value={farmerForm.farmName}
+                      onChange={handleFarmerChange}
+                      className="form-input pl-10 block w-full"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="establishedYear"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Established Year
+                  </label>
+                  <input
+                    type="number"
+                    id="establishedYear"
+                    name="establishedYear"
+                    value={farmerForm.establishedYear}
+                    onChange={handleFarmerChange}
+                    className="form-input block w-full"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+              </div>            <div className="mb-6">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Farm Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows="4"
+                  value={farmerForm.description}
+                  onChange={handleFarmerChange}
+                  className="form-input block w-full pl-3"
+                  placeholder="Tell customers about your farm..."
+                  required
+                ></textarea>
+              </div>
+
+              {/* Farm Images Upload Section */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Farm Images
+                </label>              <div className="flex flex-col space-y-3">
+                  {/* Upload Area with Drag & Drop */}
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-6 transition-all duration-200 ${isDragOver
+                      ? 'border-green-500 bg-green-50'
+                      : farmImageUploadState.isUploading
+                        ? 'border-gray-200 bg-gray-50'
+                        : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
+                      }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <div className="text-center">
+                      <div className="flex justify-center mb-3">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isDragOver ? 'bg-green-200' : 'bg-green-100'
+                          }`}>
+                          <FaUpload className={`text-xl transition-colors ${isDragOver ? 'text-green-600' : 'text-green-500'
+                            }`} />
+                        </div>
+                      </div>
+                      <label className="cursor-pointer">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-1">
+                            {isDragOver
+                              ? 'Drop your farm images here'
+                              : 'Drag & drop farm images or click to browse'
+                            }
+                          </p>
+                          <p className="text-xs text-gray-500 mb-3">
+                            PNG, JPG, WebP up to 5MB each (Max 10 images)
+                          </p>
+                          <span className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${farmImageUploadState.isUploading
+                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                            : isDragOver
+                              ? 'bg-green-700 text-white'
+                              : 'bg-green-600 text-white hover:bg-green-700'
+                            }`}>
+                            {farmImageUploadState.isUploading ? 'Uploading...' : 'Choose Images'}
+                          </span>
+                        </div>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleFarmImageChange}
+                          className="hidden"
+                          disabled={farmImageUploadState.isUploading}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>              {/* Upload Progress Component */}
+                <UploadProgress
+                  isUploading={farmImageUploadState.isUploading}
+                  progress={farmImageUploadState.progress}
+                  uploadComplete={farmImageUploadState.uploadComplete}
+                  uploadError={farmImageUploadState.uploadError}
+                  fileCount={farmImageUploadState.fileCount}
+                  className="mt-4"
+                />{/* Image Preview Grid */}
+                {farmImagePreviewUrls.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                      Farm Images ({farmImagePreviewUrls.length})
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {farmImagePreviewUrls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                            <img
+                              src={url || "/placeholder.svg"}
+                              alt={`Farm image ${index + 1}`}
+                              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/placeholder.svg";
+                              }}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFarmImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg transform hover:scale-110"
+                            disabled={farmImageUploadState.isUploading}
+                            title="Remove image"
+                          >
+                            <FaTimes className="w-3 h-3" />
+                          </button>
+                          {/* Image index indicator */}
+                          <div className="absolute bottom-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>                  <p className="text-xs text-gray-500 mt-2">
+                      Drag and drop images or click to browse. Images will be optimized automatically for best performance.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Farming Practices
+                </label>
+                <div className="flex space-x-2 mb-2">
+                  <input
+                    type="text"
+                    value={farmingPractice}
+                    onChange={(e) => setFarmingPractice(e.target.value)}
+                    className="form-input flex-grow pl-3"
+                    placeholder="e.g., Organic, No-till, Permaculture"
+                  />
                   <button
                     type="button"
-                    onClick={handleSameForAllBusinessHours}
-                    className="flex items-center gap-2 text-sm bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-md"
+                    onClick={handleAddFarmingPractice}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                   >
-                    <FaCheckCircle className="text-sm" />
-                    Apply Monday to all days
+                    Add
                   </button>
-                )}
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                {Object.entries(farmerForm.businessHours).map(
-                  ([day, hours]) => (
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {farmerForm.farmingPractices.map((practice, index) => (
                     <div
-                      key={day}
-                      className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center p-3 border border-gray-200 rounded-lg"
+                      key={index}
+                      className="bg-green-100 text-green-800 px-3 py-1 rounded-full flex items-center"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${hours.closed ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                        <span className="capitalize font-medium">{day}</span>
-                        {day === "monday" && hasSetMondayHours && (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                            Reference
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Opening Time</label>
-                        <input
-                          type="time"
-                          name={`businessHours.${day}.open`}
-                          value={hours.open}
-                          onChange={handleFarmerChange}
-                          className="form-input text-sm"
-                          disabled={hours.closed}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Closing Time</label>
-                        <input
-                          type="time"
-                          name={`businessHours.${day}.close`}
-                          value={hours.close}
-                          onChange={handleFarmerChange}
-                          className="form-input text-sm"
-                          disabled={hours.closed}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <label className="flex items-center gap-2 text-sm text-gray-600">
-                          <input
-                            type="checkbox"
-                            checked={hours.closed}
-                            onChange={(e) => {
-                              const isChecked = e.target.checked;
-                              setFarmerForm({
-                                ...farmerForm,
-                                businessHours: {
-                                  ...farmerForm.businessHours,
-                                  [day]: {
-                                    ...hours,
-                                    closed: isChecked,
-                                    open: isChecked ? "" : hours.open,
-                                    close: isChecked ? "" : hours.close,
-                                  },
-                                },
-                              });
-                            }}
-                            className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                          />
-                          <span className="flex items-center gap-1">
-                            <FaTimes className="text-red-500 text-xs" />
-                            Closed
-                          </span>
-                        </label>
-                        {hours.open && hours.close && !hours.closed && (
-                          <div className="text-xs text-green-600 font-medium">
-                            {hours.open} - {hours.close}
-                          </div>
-                        )}
-                      </div>
+                      <span>{practice}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFarmingPractice(index)}
+                        className="ml-2 text-green-800 hover:text-green-900"
+                      >
+                        &times;
+                      </button>
                     </div>
-                  )
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={farmerLoading || farmImageUploadState.isUploading}
-            >
-              {farmImageUploadState.isUploading
-                ? `Uploading... ${farmImageUploadState.progress}%`
-                : farmerLoading
-                  ? "Saving..."
-                  : "Save Farm Profile"
-              }
-            </button>
-
-            {farmerSuccess && (
-              <div className="mt-4 flex items-center text-green-600">
-                <FaCheck className="mr-2" />
-                <span>Farm profile updated successfully!</span>
+              <div className="mb-6">
+                <h3 className="text-lg font-medium mb-3">Social Media</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label
+                      htmlFor="facebook"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Facebook
+                    </label>
+                    <input
+                      type="url"
+                      id="facebook"
+                      name="socialMedia.facebook"
+                      value={farmerForm.socialMedia.facebook}
+                      onChange={handleFarmerChange}
+                      className="form-input block w-full pl-3"
+                      placeholder="https://facebook.com/yourfarm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="instagram"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Instagram
+                    </label>
+                    <input
+                      type="url"
+                      id="instagram"
+                      name="socialMedia.instagram"
+                      value={farmerForm.socialMedia.instagram}
+                      onChange={handleFarmerChange}
+                      className="form-input block w-full pl-3"
+                      placeholder="https://instagram.com/yourfarm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="twitter"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Twitter
+                    </label>
+                    <input
+                      type="url"
+                      id="twitter"
+                      name="socialMedia.twitter"
+                      value={farmerForm.socialMedia.twitter}
+                      onChange={handleFarmerChange}
+                      className="form-input block w-full pl-3"
+                      placeholder="https://twitter.com/yourfarm"
+                    />
+                  </div>
+                </div>
               </div>
-            )}
-          </form>
+
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Business Hours</h3>
+                  {hasSetMondayHours && (
+                    <button
+                      type="button"
+                      onClick={handleSameForAllBusinessHours}
+                      className="flex items-center gap-2 text-sm bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-md"
+                    >
+                      <FaCheckCircle className="text-sm" />
+                      Apply Monday to all days
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {Object.entries(farmerForm.businessHours).map(
+                    ([day, hours]) => (
+                      <div
+                        key={day}
+                        className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center p-3 border border-gray-200 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${hours.closed ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                          <span className="capitalize font-medium">{day}</span>
+                          {day === "monday" && hasSetMondayHours && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                              Reference
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Opening Time</label>
+                          <input
+                            type="time"
+                            name={`businessHours.${day}.open`}
+                            value={hours.open}
+                            onChange={handleFarmerChange}
+                            className="form-input text-sm"
+                            disabled={hours.closed}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Closing Time</label>
+                          <input
+                            type="time"
+                            name={`businessHours.${day}.close`}
+                            value={hours.close}
+                            onChange={handleFarmerChange}
+                            className="form-input text-sm"
+                            disabled={hours.closed}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-sm text-gray-600">
+                            <input
+                              type="checkbox"
+                              checked={hours.closed}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                setFarmerForm({
+                                  ...farmerForm,
+                                  businessHours: {
+                                    ...farmerForm.businessHours,
+                                    [day]: {
+                                      ...hours,
+                                      closed: isChecked,
+                                      open: isChecked ? "" : hours.open,
+                                      close: isChecked ? "" : hours.close,
+                                    },
+                                  },
+                                });
+                              }}
+                              className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                            />
+                            <span className="flex items-center gap-1">
+                              <FaTimes className="text-red-500 text-xs" />
+                              Closed
+                            </span>
+                          </label>
+                          {hours.open && hours.close && !hours.closed && (
+                            <div className="text-xs text-green-600 font-medium">
+                              {hours.open} - {hours.close}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={farmerLoading || farmImageUploadState.isUploading}
+              >
+                {farmImageUploadState.isUploading
+                  ? `Uploading... ${farmImageUploadState.progress}%`
+                  : farmerLoading
+                    ? "Saving..."
+                    : "Save Farm Profile"
+                }
+              </button>
+
+              {farmerSuccess && (
+                <div className="mt-4 flex items-center text-green-600">
+                  <FaCheck className="mr-2" />
+                  <span>Farm profile updated successfully!</span>
+                </div>
+              )}
+            </form>
+          </div>
         </div>
       )}
+
+      {activeTab === "verification" && user?.role === "farmer" && (
+        <div className="glass p-6 rounded-xl">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold">Farmer Verification</h2>
+            <VerificationBadge
+              isVerified={isVerified}
+              size="md"
+              style="badge"
+              showText={true}
+            />
+          </div>
+
+          {isVerified ? (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                <FaCheckCircle className="text-green-500 text-3xl" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Verification Complete!
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Your farmer account has been verified. Consumers will see a verification badge on your profile and products.
+              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-800 mb-2">Benefits of Verification:</h4>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li>• Enhanced trust with consumers</li>
+                  <li>• Priority in search results</li>
+                  <li>• Access to premium features</li>
+                  <li>• Higher conversion rates</li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="text-center py-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+                  <FaShieldAlt className="text-gray-400 text-3xl" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Get Verified Now
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Verify your farmer account to build trust with consumers and unlock premium features.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h4 className="font-medium text-blue-800 mb-3">Verification Process:</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-medium">1</span>
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium">Government Data Verification</p>
+                      <p>Enter your Aadhar-linked mobile number and last 4 digits of Aadhar</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-medium">2</span>
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium">Instant Verification</p>
+                      <p>If found in government records, you'll be verified instantly</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-medium">3</span>
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium">Manual Verification (if needed)</p>
+                      <p>Upload documents for manual review if automatic verification fails</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={() => setShowVerificationModal(true)}
+                  className="btn btn-primary inline-flex items-center gap-2"
+                >
+                  <FaShieldAlt />
+                  Start Verification Process
+                </button>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-800 mb-2">Why Verify?</h4>
+                <ul className="text-sm text-yellow-700 space-y-1">
+                  <li>• Build consumer trust with verified badge</li>
+                  <li>• Higher visibility in search results</li>
+                  <li>• Access to premium seller tools</li>
+                  <li>• Better conversion rates on listings</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Verification Modal */}
+      <FarmerVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        onVerificationSuccess={() => {
+          setShowVerificationModal(false);
+          dispatch(getVerificationStatus());
+          dispatch(getMyFarmerProfile());
+        }}
+      />
     </div>
   );
 };
