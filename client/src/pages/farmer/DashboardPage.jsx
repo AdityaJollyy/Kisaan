@@ -407,7 +407,7 @@ const DashboardPage = () => {
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">No products yet</p>
+            <p className="text-gray-500 mb-4">No products yet</p>
             <Link
               to="/farmer/products/add"
               className="btn btn-sm btn-outline mt-4"
