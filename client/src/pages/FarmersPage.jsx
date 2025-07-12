@@ -16,7 +16,7 @@ const FarmersPage = () => {
   const { farmers, loading } = useSelector((state) => state.farmers);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [verificationFilter, setVerificationFilter] = useState("all"); // 'all', 'verified', 'unverified'
+  const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [sortBy, setSortBy] = useState("name"); // 'name', 'verified', 'createdAt'
   const [sortOrder, setSortOrder] = useState("asc");
   const [showFilters, setShowFilters] = useState(false);
@@ -25,8 +25,8 @@ const FarmersPage = () => {
     // Build query parameters
     const params = new URLSearchParams();
 
-    if (verificationFilter !== "all") {
-      params.append("verified", verificationFilter === "verified");
+    if (showVerifiedOnly) {
+      params.append("verified", "true");
     }
     if (searchTerm.trim()) {
       params.append("search", searchTerm.trim());
@@ -35,8 +35,8 @@ const FarmersPage = () => {
     params.append("order", sortOrder);
 
     // Dispatch with query string
-    dispatch(getAllFarmers(params.toString() ? `?${params.toString()}` : ''));
-  }, [dispatch, verificationFilter, searchTerm, sortBy, sortOrder]);
+    dispatch(getAllFarmers(params.toString()));
+  }, [dispatch, showVerifiedOnly, searchTerm, sortBy, sortOrder]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -44,7 +44,7 @@ const FarmersPage = () => {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setVerificationFilter("all");
+    setShowVerifiedOnly(false);
     setSortBy("name");
     setSortOrder("asc");
   };
@@ -61,9 +61,9 @@ const FarmersPage = () => {
 
       {/* Search and Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row lg:flex-row gap-4">
           {/* Search */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <input
                 type="text"
@@ -78,39 +78,45 @@ const FarmersPage = () => {
             </div>
           </div>
 
+          {/* Verified Farmers Toggle */}
+          <div className="flex items-center sm:shrink-0">
+            <button
+              onClick={() => setShowVerifiedOnly(!showVerifiedOnly)}
+              className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-lg border transition-all duration-200 text-sm sm:text-base ${showVerifiedOnly
+                ? 'bg-green-50 border-green-300 text-green-700 shadow-sm'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+            >
+              <div className={`w-4 h-4 sm:w-5 sm:h-5 border-2 rounded flex items-center justify-center transition-all duration-200 ${showVerifiedOnly
+                ? 'bg-green-500 border-green-500'
+                : 'border-gray-300'
+                }`}>
+                {showVerifiedOnly && (
+                  <FaCheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                )}
+              </div>
+              <span className="font-medium hidden sm:inline">Show only verified farmers</span>
+              <span className="font-medium sm:hidden">Verified only</span>
+            </button>
+          </div>
+
           {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-3 border rounded-lg transition-colors ${showFilters
+            className={`flex items-center gap-2 px-3 sm:px-4 py-3 border rounded-lg transition-colors text-sm sm:text-base ${showFilters
               ? 'bg-green-50 border-green-300 text-green-700'
               : 'border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
           >
             <FaFilter />
-            Filters
+            <span className="hidden sm:inline">Sort</span>
           </button>
         </div>
 
         {/* Filter Options */}
         {showFilters && (
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Verification Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Verification Status
-                </label>
-                <select
-                  value={verificationFilter}
-                  onChange={(e) => setVerificationFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="all">All Farmers</option>
-                  <option value="verified">Verified Only</option>
-                  <option value="unverified">Unverified Only</option>
-                </select>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Sort By */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -158,7 +164,7 @@ const FarmersPage = () => {
       </div>
 
       {/* Active Filters Display */}
-      {(searchTerm || verificationFilter !== "all") && (
+      {(searchTerm || showVerifiedOnly) && (
         <div className="mb-6">
           <div className="flex flex-wrap gap-2">
             <span className="text-sm text-gray-600">Active filters:</span>
@@ -170,20 +176,11 @@ const FarmersPage = () => {
                 </button>
               </span>
             )}
-            {verificationFilter !== "all" && (
+            {showVerifiedOnly && (
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                {verificationFilter === "verified" ? (
-                  <>
-                    <FaCheckCircle className="text-xs" />
-                    Verified Only
-                  </>
-                ) : (
-                  <>
-                    <FaTimes className="text-xs" />
-                    Unverified Only
-                  </>
-                )}
-                <button onClick={() => setVerificationFilter("all")}>
+                <FaCheckCircle className="text-xs" />
+                Verified Only
+                <button onClick={() => setShowVerifiedOnly(false)}>
                   <FaTimes className="text-xs ml-1" />
                 </button>
               </span>
@@ -199,9 +196,9 @@ const FarmersPage = () => {
             <p className="text-gray-600">
               Showing {farmers.length} farmer{farmers.length !== 1 ? 's' : ''}
               {searchTerm && ` matching "${searchTerm}"`}
-              {verificationFilter !== "all" && (
+              {showVerifiedOnly && (
                 <span className="ml-1">
-                  ({verificationFilter === "verified" ? "verified only" : "unverified only"})
+                  (verified only)
                 </span>
               )}
             </p>
@@ -218,12 +215,12 @@ const FarmersPage = () => {
           <FaLeaf className="text-green-500 text-5xl mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">No Farmers Found</h3>
           <p className="text-gray-600 mb-4">
-            {searchTerm || verificationFilter !== "all"
+            {searchTerm || showVerifiedOnly
               ? "Try adjusting your search criteria or filters."
               : "No farmers have joined yet."
             }
           </p>
-          {(searchTerm || verificationFilter !== "all") && (
+          {(searchTerm || showVerifiedOnly) && (
             <button
               onClick={clearFilters}
               className="text-green-600 hover:text-green-700 font-medium"

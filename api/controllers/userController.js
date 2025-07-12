@@ -7,6 +7,7 @@ const FarmerProfile = require("../models/FarmerProfileModel");
 exports.getAllFarmers = async (req, res) => {
   try {
     const { verified, search, sortBy = 'name', order = 'asc' } = req.query;
+    console.log('Query params received:', req.query);
 
     // Build filter for farmers
     let userFilter = { role: "farmer" };
@@ -48,9 +49,21 @@ exports.getAllFarmers = async (req, res) => {
     let filteredFarmers = farmersWithProfiles;
     if (verified !== undefined) {
       const isVerifiedFilter = verified === 'true';
-      filteredFarmers = farmersWithProfiles.filter(farmer =>
-        farmer.farmerProfile ? farmer.farmerProfile.isVerified === isVerifiedFilter : !isVerifiedFilter
-      );
+      console.log(`Applying verification filter: verified=${verified}, isVerifiedFilter=${isVerifiedFilter}`);
+      console.log(`Total farmers before filter: ${farmersWithProfiles.length}`);
+
+      filteredFarmers = farmersWithProfiles.filter(farmer => {
+        const isActuallyVerified = farmer.farmerProfile?.isVerified === true;
+        if (isVerifiedFilter) {
+          // Show only verified farmers
+          return isActuallyVerified;
+        } else {
+          // Show only unverified farmers
+          return !isActuallyVerified;
+        }
+      });
+
+      console.log(`Total farmers after filter: ${filteredFarmers.length}`);
     }
 
     // Sort by verification status if requested
