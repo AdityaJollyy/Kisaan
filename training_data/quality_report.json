@@ -1,0 +1,41 @@
+{
+  "summary": {
+    "total_samples": 20000,
+    "languages": 6,
+    "actions": 6,
+    "categories": 5,
+    "issues_count": 0
+  },
+  "distribution": {
+    "languages": {
+      "en": 3264,
+      "hi": 3380,
+      "bn": 3357,
+      "te": 3284,
+      "mr": 3328,
+      "ta": 3387
+    },
+    "actions": {
+      "check": 3316,
+      "update": 3338,
+      "increase": 3299,
+      "decrease": 3279,
+      "remove": 3358,
+      "add_new": 3410
+    },
+    "categories": {
+      "fruits": 4386,
+      "spices": 3334,
+      "pulses": 3353,
+      "grains": 3401,
+      "vegetables": 5526
+    }
+  },
+  "quality_metrics": {
+    "uniqueness_score": 64.81,
+    "integrity_score": 100.0,
+    "language_balance": 96.36846767050487,
+    "action_balance": 96.158357771261,
+    "overall_quality": 89.33420636044147
+  }
+}

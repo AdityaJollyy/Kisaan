@@ -54,3 +54,20 @@ Desktop.ini
 # Package manager files
 package-lock.json.bak
 yarn.lock.bak
+
+# AI Training Data (large files)
+training_data/*.jsonl
+production_training_data/
+test_output/
+*.jsonl
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+*.egg-info/

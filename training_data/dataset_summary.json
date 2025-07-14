@@ -1,0 +1,46 @@
+{
+  "total_chunks": 10,
+  "languages_supported": 13,
+  "languages": {
+    "en": "English",
+    "hi": "Hindi",
+    "bn": "Bengali",
+    "te": "Telugu",
+    "mr": "Marathi",
+    "ta": "Tamil",
+    "gu": "Gujarati",
+    "kn": "Kannada",
+    "ml": "Malayalam",
+    "pa": "Punjabi",
+    "or": "Odia",
+    "as": "Assamese",
+    "ur": "Urdu"
+  },
+  "actions_covered": [
+    "check",
+    "update",
+    "increase",
+    "decrease",
+    "remove",
+    "add_new"
+  ],
+  "sample_distribution": {
+    "by_language": {
+      "en": 331,
+      "hi": 334,
+      "bn": 331,
+      "te": 320,
+      "mr": 328,
+      "ta": 356
+    },
+    "by_action": {
+      "check": 338,
+      "update": 339,
+      "increase": 328,
+      "decrease": 328,
+      "remove": 328,
+      "add_new": 339
+    }
+  },
+  "generation_timestamp": "2025-07-14T14:19:20.420290"
+}
